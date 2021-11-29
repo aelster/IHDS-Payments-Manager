@@ -1,0 +1,641 @@
+body {
+    font: 100%/1.4 Verdana, Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #000;
+}
+/* ~~ Element/tag selectors ~~ */
+ul, ol, dl { /* Due to variations between browsers, it's best practices to zero padding and margin on lists. For consistency, you can either specify the amounts you want here, or on the list items (LI, DT, DD) they contain. Remember that what you do here will cascade to the .nav list unless you write a more specific selector. */
+    padding: 0;
+    margin: 0;
+}
+h1, h2, h3, h4, h5, h6, p {
+    margin-top: 0;	 /* removing the top margin gets around an issue where margins can escape from their containing div. The remaining bottom margin will hold it away from any elements that follow. */
+    padding-right: 15px;
+    padding-left: 15px; /* adding the padding to the sides of the elements within the divs, instead of the divs themselves, gets rid of any box model math. A nested div with side padding can also be used as an alternate method. */
+}
+a img { /* this selector removes the default blue border displayed in some browsers around an image when it is surrounded by a link */
+    border: none;
+}
+/* ~~ Styling for your site's links must remain in this order - including the group of selectors that create the hover effect. ~~ */
+a:link {
+    color: #42413C;
+    text-decoration: underline; /* unless you style your links to look extremely unique, it's best to provide underlines for quick visual identification */
+}
+a:visited {
+    color: #6E6C64;
+    text-decoration: underline;
+}
+a:hover, a:active, a:focus { /* this group of selectors will give a keyboard navigator the same hover experience as the person using a mouse. */
+    text-decoration: none;
+}
+/* ~~this fixed width container surrounds the other divs~~ */
+.container {
+    width: 100%;
+    background-color: #FFF;
+    margin: 0 auto; /* the auto value on the sides, coupled with the width, centers the layout */
+}
+/* ~~ the header is not given a width. It will extend the full width of your layout. It contains an image placeholder that should be replaced with your own linked logo ~~ */
+/* ~~ These are the columns for the layout. ~~ 
+
+1) Padding is only placed on the top and/or bottom of the divs. The elements within these divs have padding on their sides. This saves you from any "box model math". Keep in mind, if you add any side padding or border to the div itself, it will be added to the width you define to create the *total* width. You may also choose to remove the padding on the element in the div and place a second div within it with no width and the padding necessary for your design. You may also choose to remove the padding on the element in the div and place a second div within it with no width and the padding necessary for your design.
+
+2) No margin has been given to the columns since they are all floated. If you must add margin, avoid placing it on the side you're floating toward (for example: a right margin on a div set to float right). Many times, padding can be used instead. For divs where this rule must be broken, you should add a "display:inline" declaration to the div's rule to tame a bug where some versions of Internet Explorer double the margin.
+
+3) Since classes can be used multiple times in a document (and an element can also have multiple classes applied), the columns have been assigned class names instead of IDs. For example, two sidebar divs could be stacked if necessary. These can very easily be changed to IDs if that's your preference, as long as you'll only be using them once per document.
+
+4) If you prefer your nav on the right instead of the left, simply float these columns the opposite direction (all right instead of all left) and they'll render in reverse order. There's no need to move the divs around in the HTML source.
+
+*/
+/* ~~ This grouped selector gives the lists in the .content area space ~~ */
+.content ul, .content ol {
+    padding: 0 15px 15px 40px; /* this padding mirrors the right padding in the headings and paragraph rule above. Padding was placed on the bottom for space between other elements on the lists and on the left to create the indention. These may be adjusted as you wish. */
+}
+/* ~~ The navigation list styles (can be removed if you choose to use a premade flyout menu like Spry) ~~ */
+ul.nav {
+    list-style: none; /* this removes the list marker */
+    border-top: 1px solid #666; /* this creates the top border for the links - all others are placed using a bottom border on the LI */
+    margin-bottom: 15px; /* this creates the space between the navigation on the content below */
+}
+ul.nav li {
+    border-bottom: 1px solid #666; /* this creates the button separation */
+}
+ul.nav a, ul.nav a:visited { /* grouping these selectors makes sure that your links retain their button look even after being visited */
+    padding: 5px 5px 5px 15px;
+    display: block; /* this gives the link block properties causing it to fill the whole LI containing it. This causes the entire area to react to a mouse click. */
+    width: 160px;  /*this width makes the entire button clickable for IE6. If you don't need to support IE6, it can be removed. Calculate the proper width by subtracting the padding on this link from the width of your sidebar container. */
+    text-decoration: none;
+    background-color: #C6D580;
+}
+ul.nav a:hover, ul.nav a:active, ul.nav a:focus { /* this changes the background and text color for both mouse and keyboard navigators */
+    background-color: #ADB96E;
+    color: #FFF;
+}
+/* ~~ The footer ~~ */
+.footer {
+    padding: 10px 0;
+    background-color: #CCC49F;
+    position: relative;/* this gives IE6 hasLayout to properly clear */
+    clear: both; /* this clear property forces the .container to understand where the columns end and contain them */
+}
+/* ~~ miscellaneous float/clear classes ~~ */
+.fltrt {  /* this class can be used to float an element right in your page. The floated element must precede the element it should be next to on the page. */
+    float: right;
+    margin-left: 8px;
+}
+.fltlft { /* this class can be used to float an element left in your page. The floated element must precede the element it should be next to on the page. */
+    float: left;
+    margin-right: 8px;
+}
+.clearfloat { /* this class can be placed on a <br /> or empty div as the final element following the last floated 
+div (within the #container) if the #footer is removed or taken out of the */
+}
+#container {
+    height: 1000px;
+}
+#banner {
+    height: 18px;
+}
+#site {
+    margin: 0px;
+}
+#site-dev {
+    text-align: center;
+    color: red;
+    padding: 0px;
+    margin: 0px;
+    height: 18px;
+}
+#site-prod {
+    text-align: center;
+    color: green;
+    padding: 0px;
+    margin: 0px;
+}
+#content {
+    padding: 10px 0;
+    width: 100%;
+    position: absolute;
+    top: 18px;
+}
+#sidebar {
+    width: 100px;
+    float: left;
+    padding-bottom: 5px;
+}
+#palette {
+    float:left;
+/*    font-size: 8px; */
+    font-weight: normal;
+    margin-left: 5px;
+}
+#bannerButtons input {
+    width: 100px;
+    vertical-align: middle;
+    float: left;
+    height: 18px;
+    margin: 0 0 0 10px;
+}
+.dw-size * {
+    font-size: 11px;
+    font-weight: normal;
+}
+#banner #site {
+    float: left;
+}
+.form-group { /* login screen */
+    width: 400px;
+}
+.row hr { /* login screen */
+    width: 400px;
+}
+.sidebar-btn {
+    width: 100px;
+    margin: 5px 0 0 0;
+    border-radius: 5px;
+    text-align: left;
+}
+
+.sidebar-btn.selected {
+    background: lightgreen;
+    border-radius: 5px;
+}
+
+.mail-live {
+    background: red;
+    color: #FFF;
+    font-weight: bold;
+}
+
+.mail-testxxx {
+    background: #FFF;
+    color: #000;
+    font-weight: bold;
+}
+
+input.sidebar-filter-btn {
+    width: 20px;
+    margin: 5px 0 0 0;
+    float: left;
+}
+.filter-btn {
+    font-size: 8px;
+    margin: 5px 0 0 0;
+    float: left;
+}
+.dpv {
+    background-color: lightgrey;
+}
+/* Family formatting */
+
+.family {
+    border: 1px solid;
+    float: left;
+    text-align: center;
+}
+.family-inactive {
+    border: 1px solid;
+    float: left;
+    text-align: center;
+    background-color: yellow;
+}
+.family-last {
+    text-align: center;
+    clear: left;
+}
+p.family-name {
+    font-size: 12px;
+    font-weight: bold;
+}
+p.parent-name {
+    font-size: 10px;
+    font-weight: normal;
+    margin-bottom: 0px;
+}
+p.parent-kids-not-ready {
+    font-size: 10px;
+    font-weight: normal;
+    margin-bottom: 0px;
+    background-color: yellow;
+}
+.student-last {
+    float: left;
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+
+}
+p.student-name {
+    font-size: 10px;
+    font-weight: normal;
+}
+.student-row-end {
+    text-align: center;
+    clear: left;
+}
+
+#palette .debug {
+    font-size: 11px;
+}
+
+#palette .sourcestuff {
+    font-size: 11px;
+}
+
+#palette .sourcestuffdetail {
+    font-size: 11px;
+}
+
+.palette {
+    font-size: 10pt;
+}
+.detail {
+    border: 1px solid;
+    float: left;
+    text-align: center;
+}
+.detail-last {
+    text-align: center;
+    clear: left;
+}
+
+.msg_selectors {
+    border: 1px #000 solid;
+    margin: 10px;
+    padding: 10px;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+.msg_selectors p {
+    text-align: left;
+    font-size: 10pt;
+}
+
+.msg_clear {
+    text-align: center;
+    vertical-align: top;
+}
+
+.msg_names {
+    /*  height: 300px; */
+    margin-top: 20px;
+    margin-bottom: 20px;
+    text-align: left;
+    -webkit-columns: 3;
+    -moz-columns: 3;
+    columns: 3;
+    -moz-column-fill: balance;
+    column-fill: balance;
+    list-style-type: none;
+}
+
+.expected {
+    background-color: #ffcbc1;
+}
+
+.waitfast {
+    background-color: #ffcc33;
+}
+
+.ready {
+    background-color: #ace7ff;
+}
+
+.completed {
+    background-color: #bffcc6;
+}
+
+.box {
+    float: left;
+    height: 15px;
+    width: 15px;
+    margin-bottom: 15px;
+    border: 1px solid black;
+    display: inline-block;
+}
+
+.boxes {
+    text-align: center;
+    margin-left: 15px;
+}
+
+.inner {
+    float: left;
+    margin-right: 10px;
+}
+
+.outer {
+    margin-left: auto;
+    margin-right: auto;
+    display: inline-block;
+}
+
+td.contractEmailed {
+    background-color: #fcf4c4;
+}
+
+td.contractSigned {
+    background-color: #d4c4fc;
+}
+
+td.contractCompleted {
+    background-color: #B4EEB4;
+}
+
+.danger {
+    font-size: 18pt;
+    font-weight: bold;
+    color: red;
+    width: 700px;
+    text-align: center;
+}
+
+#detail-container {
+    justify-content: center;
+    display:flex;
+}
+
+#detail {
+    float:left;
+    padding-left: 5px;
+    padding-right: 5px; 
+}
+
+#detail-summary {
+    background-color: orange;
+}
+
+.fam-detail h2 { 
+    font-size: 2em;
+}
+
+.fam-detail {
+    font-size: 12px;
+}
+
+.fam-detail-container {
+    font-size:1.5em;
+    vertical-align: top;
+}
+
+.fam-detail-student {
+    font-size:1.5em;
+    float: left;
+    background-color: lightcyan;
+}
+
+.fam-detail-student-last {
+    float: none;
+}
+
+.mail_msg {
+    font-size: 1.5em;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+.mail_msg h2 {
+    font-size: 2em;
+}
+
+.contractsxxx {
+    font-size: 1.5em;
+}
+
+.myMailList {
+    font-size: 12pt;
+    margin-left: 30px;
+}
+
+.myMailList li ol {
+    margin-left: 50px;
+}
+
+.statistics {
+    font-size: 10pt;
+}
+
+.finbody {
+    overflow-y: auto;
+    height: 50%;
+}
+
+.fixed_header{
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.fixed_header tbody{
+    display:block;
+    width: 100%;
+    overflow: auto;
+    height: 500px;
+}
+
+.fixed_header thead tr {
+    display: block;
+}
+
+.fixed_header thead {
+    background: black;
+    color: #000;
+}
+
+.fixed_header th{
+    padding: 5px;
+    text-align: center;
+}
+
+.fixed_header td {
+    padding: 5px;
+    text-align: left;
+}
+
+.family-edit-notice {
+    font-size: 12pt;
+    background-color: lightpink;    
+}
+
+.early-bird-notice {
+    display: block;
+}
+
+.early-bird-notice p {
+    color: red;
+    font-size: 12pt;
+}
+
+.pdfs table {
+    border: 1px solid;
+    width: 25%;
+}
+
+.pdfs thead {
+    border: 1px solid;
+}
+
+.pdfs thead td {
+    border: 1px solid;
+    background-color: lightblue;
+    width: 20px;
+}
+
+.pdfs tbody {
+    height: 100px;
+    display: block;
+    overflow: scroll;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+.yellow {
+    background-color: yellow;
+}
+
+.contracts tbody, thead {
+    font-size: 12px;
+}
+
+.grades tbody, thead {
+    font-size: 12px;
+}
+
+p.popup {
+    font-size: 12px;
+    margin-left: 30px;
+}
+
+.help {
+    width: 40%;
+    text-align: left;
+}
+
+.hidden ul {
+    margin-left: 20px;
+    font-size: 12px;
+}
+
+td.not-done {
+    background-color: yellow;
+}
+
+td.done {
+    background-color: lightgreen;
+}
+
+#drop_file_zone {
+    background-color: #EEE;
+    border: #999 5px dashed;
+    width: 290px;
+    height: 200px;
+    padding: 8px;
+    font-size: 18px;
+}
+
+#drop_file_zone:hover {
+    background-color: gray;
+    border: #999 5px dashed;
+    width: 290px;
+    height: 200px;
+    padding: 8px;
+    font-size: 18px;
+    cursor: crosshair;
+}
+
+#drop_file_zone:dragenter {
+    background-color: red;
+}
+
+#drag_upload_file {
+  width:50%;
+  margin:0 auto;
+}
+
+#drag_upload_file p {
+  text-align: center;
+}
+
+#drag_upload_file #selectfile {
+  display: none;
+}
+
+.nw {
+    white-space: nowrap;
+}
+
+.special {
+    font-size: 10pt;
+}
+
+td.contract-terms {
+    width: 50px;
+    text-align: left;
+    background-color: yellow;
+}
+
+table.society {
+    font-size: 10pt;
+}
+
+tr.monthly > td {
+    background-color: lightcyan;
+}
+
+tr.onetime > td {
+    background-color: lightyellow;
+}
+
+ul.sort {
+    font-size: 10pt;
+    margin-left: 30%;
+}
+
+.status {
+    font-size: 14pt;
+    font-weight: bold;
+    border: 2px solid red;
+    width: 33%;
+    text-align: center;
+    display: none;
+    margin: auto;
+}
+
+.red {
+    background-color: red;
+}
+
+table.scrollable > td {
+    width: 10px;
+}
+
+input.delete {
+    background-color: lightpink;
+}
+
+input.add {
+    background-color: lightgreen;
+}
+
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+
+table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after { 
+    content: " \25B4\25BE" 
+}
+
+.ajax input[type="button"], input[type="password"], input[type="text"] {
+    font-size: 1em;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border: 0;
+}
