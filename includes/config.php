@@ -33,7 +33,7 @@ if (preg_match('/^dev.irvinehebrewday.org/', $http_host)) {
 
 $parts[] = $gSiteDir . "/ihds/php";
 $parts[] = $gSiteDir . "/bin";
-$parts[] = $gSiteDir . "/php-common";
+$parts[] = $gSiteDir . "/php-common-societies";
 $parts[] = $gSiteDir . "/PHPMailer";
 $parts[] = $gSiteDir . "/fpdf";
 $path = join(PATH_SEPARATOR, $parts);
