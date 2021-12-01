@@ -13,15 +13,15 @@ global $gPDO_num_rows;
 
 #=====================================================
 
-global $gAccessLevels;
+global $gAccessAdmin;
+global $gAccessControl;
 global $gAccessLevel;
 global $gAccessLevelEnabled;
+global $gAccessLevels;
 global $gAccessLevels;
 global $gAccessNameEnabled;
 global $gAccessNameToId;
 global $gAccessNameToLevel;
-global $gAccessControl;
-global $gAccessAdmin;
 global $gAccessOffice;
 global $gAction;
 global $gArea;
@@ -29,7 +29,7 @@ global $gAreaToMode;
 global $gAuctionYear;
 global $gBannerMode;
 global $gCrumbs;
-global $gDatabases;     # Array that holds all the Db instances  
+global $gDatabases;     # Array that holds all the Db instances
 global $gDb;            # This is the database id for all queries
 global $gDbControlId;
 global $gDbCurrentId;   # Fiscal Year ID for the current year
@@ -42,27 +42,27 @@ global $gDreamweaver;
 global $gEnrollMeFiscalYear;
 global $gEnrollMeKnownStatus;
 global $gError;
-global $gFamilyName;
 global $gFamilyLastNames;
+global $gFamilyName;
 global $gFiscalYearLookup;
 global $gFrom;
 global $gFunc; # used for buttons/actions
 global $gFunction; # used for call tree
 global $gGala;
 global $gId;
-global $gInFamilies;
 global $gIHDSStatus;
+global $gInFamilies;
 global $gLF;
 global $gMail;
 global $gMailAdmin;
 global $gMailBackup;
-global $gMailDefault;
 global $gMailDB;
-global $gMailTesting;
+global $gMailDefault;
 global $gMailServer;
 global $gMailSignature;
-global $gMailSignatureImage;        
-global $gMailSignatureImageSize;  
+global $gMailSignatureImage;
+global $gMailSignatureImageSize;
+global $gMailTesting;
 global $gMode;
 global $gModeToButtons;
 global $gPreDreamweaver;
@@ -75,13 +75,14 @@ global $gSiteDir;
 global $gSiteName;
 global $gSourceCode;
 global $gSpecialOutput;
+global $gSpiritIDstats;
 global $gSpiritIDtoDesc;
 global $gSpiritIDtoType;
-global $gSpiritIDstats;
 global $gTestModeEnabled;
 global $gTrace;
 global $gUserId;
 global $gUserName;
+global $gUserAccess;
 global $gUsers;
 
 global $error;

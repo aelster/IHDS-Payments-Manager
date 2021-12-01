@@ -33,7 +33,7 @@ if (preg_match('/^dev.irvinehebrewday.org/', $http_host)) {
 
 $parts[] = $gSiteDir . "/ihds/php";
 $parts[] = $gSiteDir . "/bin";
-$parts[] = $gSiteDir . "/php-common-2.0.1";
+$parts[] = $gSiteDir . "/php-common";
 $parts[] = $gSiteDir . "/PHPMailer";
 $parts[] = $gSiteDir . "/fpdf";
 $path = join(PATH_SEPARATOR, $parts);
@@ -47,10 +47,7 @@ include 'local-ihds-societies.php';
 include 'local_mailer.php';
 
 $gDreamweaver = 1;
-$gDbPrefix = $prefix;
-$gDebug = 4;
-$gTrace = 1;
-    
+$gDbPrefix = $prefix;    
 
 $gMailSignatureImage = 'assets/SignatureImage.png';
 $gMailSignatureImageSize = ['width' => 550, 'height' => 97]; 
