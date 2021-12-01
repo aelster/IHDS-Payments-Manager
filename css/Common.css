@@ -165,11 +165,12 @@ input.r {
     font-size: 2em;
 }
 
-.user_manager input[type="button"], input[type="password"], input[type="text"] {
+.user_manager input[type="button"], .user_manager input[type="password"], .user_manager input[type="text"] {
     font-size: 1em;
     padding: 10px;
     margin: 5px;
     border-radius: 6px;
+    border: 1px black solid;
 }
 
 .user_manager td {

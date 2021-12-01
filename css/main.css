@@ -580,12 +580,15 @@ table.society {
     font-size: 10pt;
 }
 
-tr.monthly > td {
+
+tr.monthly > td, tr.monthly > td input[type=text], tr.monthly > td select.jq {
     background-color: lightcyan;
+    padding: 2px;
 }
 
-tr.onetime > td {
+tr.onetime > td, tr.onetime > td input[type=text], tr.onetime > td select.jq {
     background-color: lightyellow;
+    padding: 2px;
 }
 
 ul.sort {
@@ -630,7 +633,7 @@ table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sor
     content: " \25B4\25BE" 
 }
 
-.ajax input[type="button"], input[type="password"], input[type="text"] {
+society.ajax input[type="button"], input[type="password"], input[type="text"] {
     font-size: 1em;
     border-radius: 0;
     padding: 0;
@@ -638,4 +641,31 @@ table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sor
     width: 100%;
     box-sizing: border-box;
     border: 0;
+}
+
+.tight_table td {
+    padding: 0;
+}
+
+.tight_table input[type="text"], select {
+    font-size: 1em;
+    border: 0;
+    padding: 5px;
+    margin: 0;  
+}
+
+.employees {
+    text-align: center;
+}
+
+.employees input[type="button"] {
+    margin-left: 10px;
+}
+
+.employees table {
+    font-size: .75em;
+}
+
+.society table {
+    font-size: .75em;
 }
