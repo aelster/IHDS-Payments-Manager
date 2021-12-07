@@ -33,7 +33,7 @@ if (preg_match('/^dev.irvinehebrewday.org/', $http_host)) {
 
 $parts[] = $gSiteDir . "/ihds/php";
 $parts[] = $gSiteDir . "/bin";
-$parts[] = $gSiteDir . "/php-common-societies";
+$parts[] = $gSiteDir . "/Common";  # /Common-Societies
 $parts[] = $gSiteDir . "/PHPMailer";
 $parts[] = $gSiteDir . "/fpdf";
 $path = join(PATH_SEPARATOR, $parts);
@@ -67,8 +67,8 @@ $gMailSignature[] = "<a href='https://irvinehebrewday.org/'>www.irvinehebrewday.
 $gMailSignature[] = "</font>";
 $gMailSignature[] = "</div>";
 
-require_once( 'SiteLoader.php' );
-SiteLoad( 'Common');
+require_once( 'php/SiteLoader.php' );
+SiteLoad( 'php/library');
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
