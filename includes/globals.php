@@ -58,6 +58,7 @@ global $gMailAdmin;
 global $gMailBackup;
 global $gMailDB;
 global $gMailDefault;
+global $gMailLive;
 global $gMailServer;
 global $gMailSignature;
 global $gMailSignatureImage;

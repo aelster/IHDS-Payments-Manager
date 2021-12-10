@@ -2,7 +2,6 @@
 require_once( 'includes/config.php' );
 
 initialize();
-#$gDebug = $gDebugWindow;
 
 Phase1(); // Anything to do before generating output?
 Phase2(); // Make any updates that are required
@@ -24,9 +23,9 @@ Phase2(); // Make any updates that are required
             echo "createIdleTimer();\n";
         }
         echo "sidebarColor('$gMode');\n";
-        if( $gMode == 'control' ) {
-            echo "setDebug($gDebug);\n";
-        }
+//        if( $gMode == 'control' ) {
+//            echo "setDebug($gDebug);\n";
+//        }
     }
     if ($gDebug & $gDebugWindow) {
         echo "if (debugWindow) debugWindow.document.close();\n";

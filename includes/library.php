@@ -98,6 +98,50 @@ function addForm() {
     }
 }
 
+function addHtmlHeader() {
+    include 'includes/globals.php';
+    echo <<<EOT
+<!DOCTYPE HTML>
+<html>
+        <head>
+            <script type="text/javascript">var debug_disabled = 0;</script>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <title>$gSiteName</title>
+EOT;
+    $styles = array();
+    $styles[] = "css/Common.css";
+    $styles[] = "css/main.css";
+
+    $scripts = array();
+    $scripts[] = "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js";
+    $scripts[] = "scripts/Common.js";
+    $scripts[] = "scripts/sorttable.js";
+    $scripts[] = "scripts/my_ajax.js";
+
+    echo <<<EOT
+    <meta charset='utf-8'>
+    <meta http-equiv='Cache-control' content='no-cache'>
+    <link rel='shortcut icon' type='image/x-icon' href='assets/favicon.ico' />
+EOT;
+
+    $force = 1;
+
+    if ($force) {
+        $tag = rand(0, 1000);
+        $str = "?dev=$tag";
+    } else {
+        $str = "";
+    }
+    foreach ($styles as $style) {
+        printf("<link href=\"%s$str\" rel=\"stylesheet\" type=\"text/css\" />\n", $style);
+    }
+
+    foreach ($scripts as $script) {
+        printf("<script type=\"text/javascript\" src=\"%s$str\"></script>\n", $script);
+    }
+    echo "</head>";
+}
+
 function addToSidebar($buttons) {
     include 'includes/globals.php';
 
@@ -200,6 +244,14 @@ function deleteDonor() {
     $gAction = "display";
 }
 
+function deleteMail() {
+    include 'includes/globals.php';
+    $gFunction[] = __FUNCTION__;
+        $id = $gId;
+        DoQuery("delete from mail where id = :id", [':id' => $id]);
+    array_pop($gFunction);
+}
+
 function displayBanner() {
     include 'includes/globals.php';
     if ($gTrace) {
@@ -284,20 +336,28 @@ function displayHome() {
 
 function displayMail() {
     include 'includes/globals.php';
+    
     if ($gTrace) {
         $gFunction[] = __FUNCTION__;
         Logger();
     }
-
-    resetMail();
 
     echo "<div class=center>";
     echo "<h2>Mail Controls</h2>";
 //    echo "<span style='background-color: yellow; width: 200px; text-align: left; display: inline-block; font-size: 12pt;'>";
     echo "</span>";
     echo "</div>";
-    echo "<br>";
-    echo "<table>";
+    echo "<input type=button value=Back onclick=\"addAction('main');\">";
+        $jsx = [];
+    $jsx[] = "setValue('from','" .  __FUNCTION__ . "')";
+    $jsx[] = "setValue('func','new')";
+    $jsx[] = "addAction('mail')";
+    $js = implode(';', $jsx); 
+    echo "&nbsp;";
+    echo "<td class=c><input type=submit onclick=\"$js\" value=New></td>";
+
+    echo "<br><br>";
+    echo "<table class=usermanager>";
 
     echo "<thead>";
     echo "<tr>";
@@ -309,28 +369,21 @@ function displayMail() {
     echo "</thead>";
 
     echo "<tbody>";
-    $stmt = DoQuery("select * from misc where lower(label) like '%email%' order by label asc");
+    $stmt = DoQuery("select * from mail where lower(label) like '%email:%' order by label asc");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $id = $row['id'];
         $label = $row['label'];
+        $value = $row['value'];
 
         if ($label == 'Email: Server') {
             echo "<tr>";
             echo "<td class=col1>$label</td>";
-            $acts = array();
-            $acts[] = "addField('$label|DueBy|$id')";
-            $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
-            $acts[] = "setValue('area','mail')";
-            $acts[] = "setValue('func','update')";
-            $acts[] = "setValue('id', '$id')";
-            $acts[] = "setValue('key', '$label')";
-            $acts[] = "addAction('update')";
             echo "<td class=col2>";
-            $tag = MakeTag("DueBy_$id");
-            printf("<select class='col2' $tag onchange=\"%s\">", implode(";", $acts));
-            foreach ($gMailDB as $idx => $obj) {
-                $selected = ( $idx == $row['DueBy'] ) ? "selected" : "";
-                echo "<option value=$idx $selected>{$obj['Label']}</option>";
+            $ajax_id = "id=\"mail__value__{$id}\"";
+            echo "<select class=\"'col2' ajax\" $ajax_id>";
+            for( $mid = 0; $mid < count($gMailDB); $mid++  )  {
+                $selected = ( $mid == $value ) ? "selected" : "";
+                echo "<option value=$mid $selected>{$gMailDB[$mid]['Label']}</option>";
             }
             echo "</select>";
             echo "</td>";
@@ -340,22 +393,29 @@ function displayMail() {
         } else {
             echo "<tr>";
             echo "<td class=col1>$label</td>";
-
-            $tag = MakeTag("value_$id");
-            $js = "onChange=\"addField('$label|value|$id');toggleBgRed('update');\"";
-            echo "<td class=col2><input class='col2' size=60 $tag $js value='" . $row['value'] . "'></td>";
+            $ajax_id = "id=\"mail__value__{$id}\"";
+            echo "<td class=col2><input class=\"'col2' ajax\" size=60 $ajax_id value='" . $row['value'] . "'></td>";
 
             $tag = MakeTag("enabled_$id");
             $acts = array();
             $acts[] = "addField('$label|enabled|$id')";
             $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
+            $acts[] = "setValue('mode','control')";
             $acts[] = "setValue('area','mail')";
             $acts[] = "setValue('func','update')";
             $acts[] = "setValue('id', '$id')";
             $acts[] = "setValue('key', '$label')";
             $acts[] = "addAction('update')";
-            $checked = empty($row['enabled']) ? "" : "checked";
-            printf("<td class='col3 c'><input $tag type='checkbox' onchange=\"%s\" value=1 $checked></td>", implode(";", $acts));
+            if( empty($row['enabled']) )  {
+                $checked = "";
+                $val = 1;
+            } else {
+                $checked = "checked";
+                $val = 0;
+            }
+            $ajax_id = "id=\"mail__enabled__{$id}\"";
+            $js = "";
+            echo "<td class=box><input class=ajax type=\"checkbox\" $ajax_id $checked $js value=\"$val\"></td>\n";
 
             $acts = array();
             $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
@@ -390,8 +450,8 @@ function displayMail() {
     $acts[] = "addField('new|label|$id')";
     $acts[] = "addField('new|value|$id')";
     $acts[] = "addField('new|enabled|$id')";
-    $acts[] = "addField('new|DueBy|$id')";
     $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
+    $acts[] = "setValue('mode','control')";
     $acts[] = "setValue('area','mail')";
     $acts[] = "setValue('func','add')";
     $acts[] = "addAction('update')";
@@ -400,42 +460,31 @@ function displayMail() {
     echo "</tr>";
     echo "</tbody>";
     echo "</table>";
-
+    
     echo "<br><br>";
 
-    echo "<h1>Email: Admin (" . count($gMailAdmin) . ") - Contracts are sent from this account</h1>";
-    echo "<ul class=myMailList>";
-    echo "<li><ol>";
-    echo "<li><span class=mail-live>Live Email is enabled if the \"Email: Admin\" account is enabled</span></li>";
-    foreach ($gMailAdmin as $mail) {
-        printf("<li>%s, %s</li>", $mail['email'], $mail['name']);
-    }
-    echo "</ol></li>";
+    echo "<h1>Email: Admin</h1>";
+    echo "<ul class=mail-desc>";
+    echo "<li>All emails are sent from this account</li>";
+    echo "<li class=warn>If enabled, emails are sent to members</b></li>";
+    echo "<li>If not enabled, emails are sent to Testing accounts</li>";
     echo "</ul>";
 
     echo "<br><br>";
 
-    echo "<h1>Email: Default (" . count($gMailDefault) . ") - Used if no Admin or Testing accounts are enabled</h1>";
-    echo "<ul class=myMailList>";
-    echo "<li><ol>";
-    foreach ($gMailDefault as $mail) {
-        printf("<li>%s, %s</li>", $mail['email'], $mail['name']);
-    }
-    echo "</ol></li>";
+    echo "<h1>Email: Default</h1>";
+    echo  "<ul class=mail-desc>";
+    echo "<li>This is the default mail account if nothing else is set up</li>";
     echo "</ul>";
-
+    
     echo "<br><br>";
 
-    echo "<h1> Email: Testing (" . count($gMailTesting) . ")</h1>";
-    echo "<ul class=myMailList>";
-    echo "<li><ol>";
-    foreach ($gMailTesting as $mail) {
-        printf("<li>%s, %s</li>", $mail['email'], $mail['name']);
-    }
-    echo "</ol></li>";
+    echo "<h1>Email: Testing</h1>";
+    echo  "<ul class=mail-desc>";
+    echo "<li>If Admin is disabled, mail is sent to these accounts</li>";
+    echo "<li>Multiple accounts can be created</li>";
     echo "</ul>";
-    echo "</ul>";
-
+    
     if ($gTrace) {
         array_pop($gFunction
         );
@@ -583,7 +632,7 @@ function displayPalette() {
                     break;
 
                 case "mail":
-                    displayMail();
+                    UserMail('display');
                     break;
 
                 case "misc":
@@ -629,7 +678,7 @@ function displayPalette() {
             UserManager("logout");
             break;
 
-        case "password":
+        case "login":
             if ($gFunc == "getemail") {
                 UserManager('forgot');
             } elseif ($gFunc == "welcome") {
@@ -638,6 +687,8 @@ function displayPalette() {
                 UserManager('reset');
             } elseif ($gFunc == "change") {
                 UserManager('welcome');
+            } elseif( $gFunc == 'mail' ) {
+                UserManager('mail');
             }
             break;
 
@@ -989,51 +1040,6 @@ function dumpCSV($society) {
     exit();
 }
 
-function generateHtmlHeader() {
-    include 'includes/globals.php';
-    echo <<<EOT
-<!DOCTYPE HTML>
-<html>
-        <head>
-            <script type="text/javascript">var debug_disabled = 0;</script>
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-            <title>$gSiteName</title>
-EOT;
-    $styles = array();
-    $styles[] = "css/Common.css";
-    $styles[] = "css/main.css";
-
-    $scripts = array();
-    $scripts[] = "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js";
-    $scripts[] = "scripts/main.js";
-    $scripts[] = "scripts/commonv2.js";
-    $scripts[] = "scripts/sorttable.js";
-    $scripts[] = "scripts/my_ajax.js";
-
-    echo <<<EOT
-    <meta charset='utf-8'>
-    <meta http-equiv='Cache-control' content='no-cache'>
-    <link rel='shortcut icon' type='image/x-icon' href='assets/favicon.ico' />
-EOT;
-
-    $force = 1;
-
-    if ($force) {
-        $tag = rand(0, 1000);
-        $str = "?dev=$tag";
-    } else {
-        $str = "";
-    }
-    foreach ($styles as $style) {
-        printf("<link href=\"%s$str\" rel=\"stylesheet\" type=\"text/css\" />\n", $style);
-    }
-
-    foreach ($scripts as $script) {
-        printf("<script type=\"text/javascript\" src=\"%s$str\"></script>\n", $script);
-    }
-    echo "</head>";
-}
-
 function initialize() {
     include 'includes/globals.php';
     $gDb = $gPDO[$gDbControlId]['inst'];
@@ -1087,7 +1093,7 @@ function initialize() {
         $gAccessLevels[] = $row['name'];
     }
 
-    resetMail();
+    loadMailSettings();
 
     $stmt = DoQuery("select value from misc where label = 'Site_Name'");
     if ($gPDO_num_rows) {
@@ -1110,7 +1116,7 @@ function initialize() {
         'bbl' => [['area' => 'users', 'action' => 'update', 'label' => 'Update', 'js' => "setValue('func','update')"]]];
     $buttons[] = ['area' => 'privileges',
         'bbl' => [['area' => 'privileges', 'action' => 'update', 'label' => 'Update', 'js' => "setValue('func','update')"]]];
-    $buttons[] = ['area' => 'debug', 'label' => 'Debug', 'js' => "setValue('func','display')"];
+//    $buttons[] = ['area' => 'debug', 'label' => 'Debug', 'js' => "setValue('func','display')"];
     $buttons[] = ['area' => 'special', 'label' => 'Special', 'js' => "setValue('func','special')"];
 
     $gModeToButtons[$mode] = $buttons;
@@ -1150,6 +1156,65 @@ function initialize() {
     }
 }
 
+function loadMailSettings() {
+    include 'includes/globals.php';
+
+    if ($gTrace) {
+        $gFunction[] = __FUNCTION__;
+        Logger();
+    }
+    $gMailAdmin = $gMailDefault = $gMailTesting = [];
+    $query = "select label, `value`, enabled from mail where lower(label) like '%email:%'";
+
+    $stmt = DoQuery($query);
+    if ($gPDO_num_rows == 0) {
+        DoQuery("insert into mail (label, value, enabled) values ('Email Server','',0)");
+        DoQuery("insert into mail (label, value, enabled) values ('Email: Default','andy.elster@gmail.com, Andy Elster',1)");
+    }
+
+    $gMailLive = 0;
+    $stmt = DoQuery($query);
+    while (list( $label, $value, $enabled ) = $stmt->fetch(PDO::FETCH_NUM)) {
+        $tmp = preg_split("/,/", $value, NULL, PREG_SPLIT_NO_EMPTY);
+        $j = count($tmp);
+        if ($j == 1) {
+            $email = $name = $tmp[0];
+        } elseif ($j == 2) {
+            $email = $tmp[0];
+            $name = $tmp[1];
+        }
+        if (stripos($label, "admin") !== false) {
+            $gMailAdmin[] = ['email' => "$email", 'name' => "$name"];
+
+            if( $enabled && ! $gProduction) {
+                DoQuery("update mail set enabled = 0 where label = 'Email: Admin'"); # Don't let me send out live emails from home
+                echo "<script type=\"text/javascript\">alert('WARNING: Non-Production Machine: gMailLive forced to off');</script>";
+                $enabled = false;
+            }
+            $gMailLive = $enabled;
+        } elseif (stripos($label, "default") !== false) {
+            $gMailDefault[] = ['email' => "$email", 'name' => "$name"];
+        } elseif (stripos($label, "backup") !== false) {
+            $gMailBackup[] = ['email' => "$email", 'name' => "$name"];
+        } elseif ($enabled && stripos($label, "testing") !== false) {
+            $gMailTesting[] = ['email' => "$email", 'name' => "$name"];
+        } elseif (stripos($label, "server") !== false) {
+            $gMailServer = $gMailDB[$value];
+        }
+    }
+
+    if (count($gMailAdmin) == 0) {
+        $gMailAdmin = $gMailDefault;
+    }
+    if (count($gMailTesting) == 0) {
+        $gMailTesting = $gMailDefault;
+    }
+
+    if ($gTrace) {
+        array_pop($gFunction);
+    }
+}
+
 function phase1() {     # Phase1 is for pre-output actions that would interfere with PDF production
     include 'includes/globals.php';
 
@@ -1162,7 +1227,7 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
     $dpv_phase = 1;
     $dpv_tag = "pre-html";
 
-    generateHtmlHeader();
+    addHtmlHeader();
 
     if ($gDebug) {
         Logger('****************************************************************************');
@@ -1200,14 +1265,12 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
         UserManager('load', $_SESSION['userid']);
         $saveDb = $gDb;
         $gDb = $gPDO[$gDbControlId]['inst'];
-        $stmt = DoQuery("select debug from users where id = $gUserId");
-        list($val) = $stmt->fetch(PDO::FETCH_NUM);
         $stmt = DoQuery( "select priv_id from access where id = $gUserId");
         list($val) = $stmt->fetch(PDO::FETCH_NUM);
         $stmt = DoQuery( "select name from privileges where id = $val");
         list($gUserAccess) = $stmt->fetch(PDO::FETCH_NUM);
         $gDb = $saveDb;
-#        echo "<script type=\"text/javascript\">createIdleTimer();</script>";   
+        echo "<script type=\"text/javascript\">createIdleTimer();</script>";   
     } else {
         Logger("user not logged in");
     }
@@ -1285,7 +1348,11 @@ function phase2() { # updates
                     break;
 
                 case "users":
-                    UserManager('update');
+                    if( $gFunc == 'reset') {
+                        UserManager('mail');
+                    } else {
+                        UserManager('update');
+                    }
                     $gAction = "display";
                     break;
             }
@@ -1336,7 +1403,7 @@ function phase3() { # display
     }
 }
 
-function resetMail() {
+function xxresetMail() {
     include 'includes/globals.php';
     include 'local_mailer.php';
 
@@ -1493,15 +1560,9 @@ function updateMisc() {
             $args[":v1"] = $newVal;
             $args[":v2"] = $id;
             DoQuery($query, $args);
-            if ($label == "Email: Admin" && $newVal == 1) {
-                DoQuery("update misc set enabled = 0 where Label = \"Email: Testing\"");
-            } elseif ($label == "Email: Testing" && $newVal == 1) {
-                DoQuery("update misc set enabled = 0 where Label = \"Email: Admin\"");
-            }
         }
     }
-    DoQuery("update misc set enabled = 1 where Label = \"Email: Default\"");
-    resetMail();
+    loadMailSettings();
     if ($gTrace) {
         array_pop($gFunction);
     }

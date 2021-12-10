@@ -14,13 +14,13 @@ while [ $done -eq 0 ]; do
 done
 
 rm -f -- ../css/Common.css
-rm -f -- ../scripts/commonv2.js
+rm -f -- ../scripts/Common.js
 
 if [ "$ans" = "p" ]; then
-    ln -v -s /usr/local/Common-societies/css/Common.css ../css/Common.css
-    ln -v -s /usr/local/Common-societies/scripts/commonv2.js ../scripts/commonv2.js
+    ln -v -s /usr/local/site/Common-societies/css/Common.css ../css/Common.css
+    ln -v -s /usr/local/site/Common-societies/scripts/Common.js ../scripts/Common.js
 
 else
-    ln -v -s /usr/local/Common/css/Common.css ../css/Common.css
-    ln -v -s /usr/local/Common/scripts/commonv2.js ../scripts/commonv2.js
+    ln -v -s /usr/local/site/Common/css/Common.css ../css/Common.css
+    ln -v -s /usr/local/site/Common/scripts/Common.js ../scripts/Common.js
 fi
