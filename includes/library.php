@@ -113,7 +113,7 @@ EOT;
     $styles[] = "css/main.css";
 
     $scripts = array();
-    $scripts[] = "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js";
+    $scripts[] = "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js";    
     $scripts[] = "scripts/Common.js";
     $scripts[] = "scripts/sorttable.js";
     $scripts[] = "scripts/my_ajax.js";

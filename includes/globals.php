@@ -177,3 +177,23 @@ $bit6 = 2 ** 6;
 $bit7 = 2 ** 7;
 $bit8 = 2 ** 8;
 $bit9 = 2 ** 9;
+
+$gDreamweaver = 1;
+
+$gMailSignatureImage = 'assets/SignatureImage.png';
+$gMailSignatureImageSize = ['width' => 550, 'height' => 97]; 
+
+$gMailSignature = [];
+$gMailSignature[] = "";
+$gMailSignature[] = "";
+$gMailSignature[] = "<span style='font-family:george,serif; font-size:15px; font-weight:900;'><i>Andy Elster";
+$gMailSignature[] = "Co-Founder, CFO, Board of Directors</i></span>";
+$gMailSignature[] = "";
+$gMailSignature[] = "<img src=\"cid:sigimg\" width='200' height='33'/>";
+$gMailSignature[] = '<div><font face="tahoma, sans-serif" color="#6aa84f" size="small">';
+$gMailSignature[] = "<a href='https://goo.gl/maps/HZKrQKjxue52'>1500 E 17th Street</a>";
+$gMailSignature[] = "<a href='https://goo.gl/maps/HZKrQKjxue52'>Santa Ana, CA 92705</a>";
+$gMailSignature[] = "Mobile: <a href='tel:9494786818'>(949) 478-6818</a>";
+$gMailSignature[] = "<a href='https://irvinehebrewday.org/'>www.irvinehebrewday.org</a>";
+$gMailSignature[] = "</font>";
+$gMailSignature[] = "</div>";
