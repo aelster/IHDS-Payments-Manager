@@ -860,7 +860,7 @@ function displayDonors() {
     echo "<thead>";
     echo "<tr>";
     echo "<th>Act</th>";
-    echo "<th>Date</th>";
+    echo "<th>Date/Time</th>";
     foreach ($fields as $f) {
         printf("<th>%s</th>", ucfirst($f));
     }
@@ -885,7 +885,7 @@ function displayDonors() {
         $freq = ($row["frequency"] == "monthlytab") ? "monthly" : "onetime";
         echo "<tr class=\"$freq\">";
         $phpdate = strtotime($row['time']);
-        $mysqldate = date('m/d/Y', $phpdate);
+        $mysqldate = date('m/d/Y H:m', $phpdate);
         $id = $row['id'];
 
         $jsx = [];
