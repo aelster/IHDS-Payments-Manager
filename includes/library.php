@@ -912,6 +912,14 @@ function displayDonors() {
                     $selected = ( $row[$f] == $opt ) ? "selected" : "";
                     echo "<option value=\"$opt\" $selected>$opt</option>";
                 }
+            } elseif( $f == "success") {
+                if( $row[$f] == 1 ) {
+                    $s = "Active";
+                } elseif( $row[$f] == 2 ) {
+                    $s = "Inactive";
+                }
+                printf("<input type=text size=$size class=\"ajax\" $ajax_id value=\"%s\" sorttable_customkey=\"%s\"></td>",
+                        $s, $row[$f]);
             } else {
                 printf("<input type=text size=$size class=\"ajax\" $ajax_id value=\"%s\" sorttable_customkey=\"%s\"></td>",
                         $row[$f], strtolower($row[$f]));
@@ -999,14 +1007,23 @@ function displaySite() {
     }
 }
 
-function dumpCSV($society) {
+function dumpCSV() {
     include 'includes/globals.php';
 
-    $filename = "Donor Report - $society.csv";
-    header('Content-Type: application/csv');
-    header('Content-Disposition: attachment; filename="' . $filename . '";');
-
-    $f = fopen('php://output', 'w');
+    $society = func_get_arg(0);
+    
+    if(func_num_args() == 1 ) { # Manual Download
+        $file = "Donor Report - $society.csv";
+        header('Content-Type: application/csv');
+        header('Content-Disposition: attachment; filename="' . $file . '";');
+        $fh = fopen('php://output', 'w');
+        $mode = "manual";
+        
+    } else {
+        $file = "$gSiteDir/tmp/Donor-Report-$society.csv";
+        $fh = fopen($file, "w");
+        $mode = "cron";
+    }
 
     $quals = [];
     $quals[] = "success = 1";
@@ -1028,16 +1045,39 @@ function dumpCSV($society) {
             foreach ($row as $key => $val) {
                 $fields[] = $key;
             }
-            fputcsv($f, $fields, ',');
+            fputcsv($fh, $fields, ',');
         }
         $values = [];
         foreach ($row as $key => $val) {
             $values[] = $val;
         }
-        fputcsv($f, $values, ',');
+        fputcsv($fh, $values, ',');
     }
-    fclose($f);
-    exit();
+    fclose($fh);
+    
+    if( $mode == "manual" ) {
+        exit();
+    } else {
+        $temp = DoQuery( "select value from mail where label = 'Email: Nightly'");
+        $dist_list = array();
+        while( list( $name ) = $temp->fetch(PDO::FETCH_LIST) ) {
+            $tmp = preg_split(",",$name);
+            $dist_list[] = $tmp[0];
+        }
+        $dist = implode(" ", $dist_list);
+        $sh_file =  "$gSiteDir/tmp/cron-email.sh";
+        $fh = fopen($sh_file,"w");
+        fputs($fh, "#!/bin/bash -x\n");
+        fputs($fh, "cd $gSiteDir/tmp\n");
+        fputs($fh, "echo | mailx -a $file -s \"Donor Database\" $dist\n");
+        fclose($fh);
+        chmod($sh_file, 0700);
+        exec($sh_file,$output,$retval);
+        #unlink($sh_file);
+        if( $retval) {
+            error_log(print_r($output,true) );
+        }
+    }
 }
 
 function initialize() {
@@ -1327,7 +1367,7 @@ function phase2() { # updates
                     break;
 
                 case "mail":
-                    updateMisc();
+                    updateMail();
                     $gAction = "display";
                     break;
 
@@ -1336,6 +1376,7 @@ function phase2() { # updates
                     $gAction = "display";
                     break;
 
+                case "all":
                 case "nachas":
                 case "rimon":
                 case "carol":
@@ -1505,7 +1546,7 @@ function selectDB() {
     initialize();
 }
 
-function updateMisc() {
+function updateMail() {
     include 'includes/globals.php';
     if ($gTrace) {
         $gFunction[] = __FUNCTION__;
@@ -1524,12 +1565,12 @@ function updateMisc() {
             if (array_key_exists($var, $_POST) && !empty($_POST[$var])) {
                 $val = $_POST[$var];
                 if (stripos($val, "email: admin") !== false) {
-                    DoQuery("select id from misc where lower(label) like \"%email: admin%\"");
+                    DoQuery("select id from mail where lower(label) like \"%email: admin%\"");
                     if ($gPDO_num_rows > 0)
                         $ok = 0;
                 }
                 if (stripos($val, "email: default") !== false) {
-                    DoQuery("select id from misc where lower(label) like \"%email: default%\"");
+                    DoQuery("select id from mail where lower(label) like \"%email: default%\"");
                     if ($gPDO_num_rows > 0)
                         $ok = 0;
                 }
@@ -1538,7 +1579,7 @@ function updateMisc() {
                 $i++;
             }
         }
-        $query = "insert into misc set " . join(',', $qx);
+        $query = "insert into mail set " . join(',', $qx);
         if ($ok) {
             Logger("query: [$query]");
             Logger("args: [" . print_r($args, true) . "]");
@@ -1546,14 +1587,14 @@ function updateMisc() {
         }
     } elseif ($gFunc == 'del') {
         $id = $_POST['id'];
-        DoQuery("delete from misc where id = :id", [':id' => $id]);
+        DoQuery("delete from mail where id = :id", [':id' => $id]);
     } elseif ($gFunc == 'update') {
         $v = preg_split('/,/', $_POST['fields'], NULL, PREG_SPLIT_NO_EMPTY);
         $flds = array_unique($v);
         foreach ($flds as $fld) {
             $args = [];
             list( $label, $colName, $id ) = preg_split('/\|/', $fld);
-            $query = "update misc set " . sprintf("%s = :v1", $colName);
+            $query = "update mail set " . sprintf("%s = :v1", $colName);
             $query .= " where id = :v2";
             $var = implode("_", [$colName, $id]);
             $newVal = array_key_exists($var, $_POST) ? $_POST[$var] : 0;
