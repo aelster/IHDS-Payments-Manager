@@ -1060,8 +1060,8 @@ function dumpCSV() {
     } else {
         $temp = DoQuery( "select value from mail where label = 'Email: Nightly'");
         $dist_list = array();
-        while( list( $name ) = $temp->fetch(PDO::FETCH_LIST) ) {
-            $tmp = preg_split(",",$name);
+        while( list( $name ) = $temp->fetch(PDO::FETCH_NUM) ) {
+            $tmp = explode(",", $name);
             $dist_list[] = $tmp[0];
         }
         $dist = implode(" ", $dist_list);
