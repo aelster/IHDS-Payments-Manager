@@ -1058,7 +1058,7 @@ function dumpCSV() {
     if( $mode == "manual" ) {
         exit();
     } else {
-        $temp = DoQuery( "select value from mail where label = 'Email: Nightly'");
+        $temp = DoQuery( "select value from mail where label = 'Email: Nightly' and enabled > 0");
         $dist_list = array();
         while( list( $name ) = $temp->fetch(PDO::FETCH_NUM) ) {
             $tmp = explode(",", $name);
