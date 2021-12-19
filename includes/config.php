@@ -31,7 +31,8 @@ if (preg_match('/^dev.irvinehebrewday.org/', $http_host)) {
     $prefix = "joylearn_";
 }
 
-$gDbPrefix = $prefix;    
+$gDbPrefix = $prefix;
+$gSiteSubPath = "ihds";
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;

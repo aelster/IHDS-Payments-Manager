@@ -74,6 +74,7 @@ global $gRosterSessionTitle;
 global $gSidebarButtons;
 global $gSiteDir;
 global $gSiteName;
+global $gSiteSubPath;
 global $gSourceCode;
 global $gSpecialOutput;
 global $gSpiritIDstats;
