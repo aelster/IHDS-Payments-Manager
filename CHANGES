@@ -4,4 +4,10 @@ modes.sh didn't work with current release structure. Modified to auto-detect dev
 v2.2.0
 Fix the SQL code to retrieve email addresses
 Change DonorBackup.php to executable
+
+v2.2.2
 [rc3 472c0dd] Require Email: Nightly names to be enabled
+
+v2.2.3
+[rc4 565c24c] DON'T USE " when displaying text. Things break with a " in the data. Needed for hebrew chipchuk
+[rc4 c075438] Only count donations with success = 1
