@@ -42,14 +42,13 @@ require( "$gSiteDir/PHPMailer/src/SMTP.php" );
 require( "$gSiteDir/PHPMailer/src/Exception.php");
 require( "$gSiteDir/fpdf/fpdf.php");
 
-$parts = array();
-$parts[] = $gSiteDir . "/ihds/php";
-$parts[] = $gSiteDir . "/bin";
-$parts[] = $gSiteDir . "/Common-IHDS-Societies";
-$parts[] = $gSiteDir . "/PHPMailer";
-$parts[] = $gSiteDir . "/fpdf";
-$path = join(PATH_SEPARATOR, $parts);
-
+$path = join(PATH_SEPARATOR, array(
+    $gSiteDir . "/ihds/php",
+    $gSiteDir . "/bin",
+    $gSiteDir . "/Common-IHDS-Societies",
+    $gSiteDir . "/PHPMailer",
+    $gSiteDir . "/fpdf"
+    ));
 set_include_path(get_include_path() . PATH_SEPARATOR . $path );
 
 include 'includes/globals.php';
@@ -61,7 +60,7 @@ include 'local_mailer.php';
 require_once( 'php/SiteLoader.php' );
 SiteLoad( 'php/library');
 
-session_start();
+if(session_status() === PHP_SESSION_NONE) session_start();
 
 selectDB();
 

@@ -4,3 +4,4 @@ modes.sh didn't work with current release structure. Modified to auto-detect dev
 v2.2.0
 Fix the SQL code to retrieve email addresses
 Change DonorBackup.php to executable
+[rc3 472c0dd] Require Email: Nightly names to be enabled

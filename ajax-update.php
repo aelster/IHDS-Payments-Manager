@@ -1,7 +1,7 @@
 <?php
 require_once( 'includes/config.php' );
 
-$trace = 0;
+$trace = 1;
 
 if ($trace) {
     error_log("");

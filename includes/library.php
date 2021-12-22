@@ -692,6 +692,12 @@ function displayPalette() {
             }
             break;
 
+        case "password":
+            if( $gFunc == "reset" ) {
+                UserManager('newpassword');
+            }
+            break;
+
         case "welcome":
             UserManager("welcome");
             break;
@@ -829,7 +835,7 @@ function displayDonors() {
     $query = "select * from donations" . $qual;
     $query .= " order by lastName asc";
 
-    $fields = ["firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
+    $fields = ["visible", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
     if ($society == "all") {
         array_splice($fields, 0, 0, ["society", "success"]);
     }
@@ -902,17 +908,19 @@ function displayDonors() {
         foreach ($fields as $f) {
             $ajax_id = "id=\"donations__{$f}__{$id}\"";
             $size = array_key_exists($f, $sizes) ? $sizes[$f] : 5;
-            echo "<td class=\"sort\">";
             if ($f == "amount") {
-                printf("<input type=text size=$size class=\"ajax\" $ajax_id value=\"\$ %s\" sorttable_customkey=\"%.2f\"></td>",
+                echo "<td class=\"sort r\">";
+                printf("<input type=text size=$size class=\"ajax r\" $ajax_id value=\"%s\" sorttable_customkey=\"%.2f\"></td>",
                         number_format($row[$f], 2), $row[$f]);
             } elseif ($f == "frequency") {
+                echo "<td class=\"sort\">";
                 echo "<select class=\"jq\" sorttable_customkey=\"{$row[$f]}\">";
                 foreach (["onetimetab", "monthlytab"] as $opt) {
                     $selected = ( $row[$f] == $opt ) ? "selected" : "";
                     echo "<option value=\"$opt\" $selected>$opt</option>";
                 }
             } elseif( $f == "success") {
+                echo "<td class=\"sort\">";
                 if( $row[$f] == 1 ) {
                     $s = "Active";
                 } elseif( $row[$f] == 2 ) {
@@ -920,7 +928,19 @@ function displayDonors() {
                 }
                 printf("<input type=text size=$size class=\"ajax\" $ajax_id value=\"%s\" sorttable_customkey=\"%s\"></td>",
                         $s, $row[$f]);
+            } elseif( $f == "visible" ) {
+                echo "<td class=\"sort c\">";
+                if( $row[$f] ) {
+                    $state = "checked";
+                    $val = 0;
+                } else {
+                    $state = "";
+                    $val = 1;
+                }
+                printf("<input type=checkbox class=\"ajax\" $ajax_id value=$val $state sorttable_customkey=\"%s\"></td>",
+                        $row[$f]);
             } else {
+                echo "<td class=\"sort\">";
                 printf("<input type=text size=$size class=\"ajax\" $ajax_id value=\"%s\" sorttable_customkey=\"%s\"></td>",
                         $row[$f], strtolower($row[$f]));
             }
@@ -997,8 +1017,17 @@ function displaySite() {
     if ($gAction == 'logout')
         return;
 
-    $uname = ($user->is_logged_in() ) ? " - $gUserName" : "";
-    $mode = ($gTestModeEnabled) ? " - <span class=mail-test>Mail Safe</span>" : " - <span class=mail-live>** Mail Live **</span>";
+    $uname  = "";
+    if( $user->is_logged_in() ) {
+        $uname = " - $gUserName";
+    } elseif( $gAction == "password" && $gFunc == "reset" ) {
+        $stat = DoQuery( "select username from users where resetToken = '$gResetKey'" );
+        if( $gPDO_num_rows  ) {
+            list($str) = $stat->fetch(PDO::FETCH_NUM);
+            $uname = " - $str";
+        }
+    }
+    $mode = (! $gMailLive) ? " - <span class=mail-test>Mail Safe</span>" : " - <span class=mail-live>** Mail Live **</span>";
 
     echo "IHDS Societies Manager (<span id=site-prod>{$gSiteName}{$uname}{$mode}</span>): ";
 
@@ -1095,6 +1124,10 @@ function initialize() {
             $gFunc = 'reset';
             $gFrom = 'email';
             $gResetKey = $qs['key'];
+            $sstat = session_status();
+            if( $sstat === PHP_SESSION_NONE || $sstat === PHP_SESSION_ACTIVE ) {
+                session_destroy();
+            }
         } elseif (!array_key_exists('XDEBUG_SESSION_START', $qs)) {
             UserManager('logout');
             exit;
@@ -1391,8 +1424,23 @@ function phase2() { # updates
                 case "users":
                     if( $gFunc == 'reset') {
                         UserManager('mail');
-                    } else {
+                    } elseif( $gFunc == 'password' ) {
                         UserManager('update');
+                        $user->login($_SESSION['username'],$_POST['newpassword1']);
+                        Logger("user logged in");
+                        UserManager('load', $_SESSION['userid']);
+                        $saveDb = $gDb;
+                        $gDb = $gPDO[$gDbControlId]['inst'];
+                        $stmt = DoQuery( "select priv_id from access where id = $gUserId");
+                        list($val) = $stmt->fetch(PDO::FETCH_NUM);
+                        $stmt = DoQuery( "select name from privileges where id = $val");
+                        list($gUserAccess) = $stmt->fetch(PDO::FETCH_NUM);
+                        $gDb = $saveDb;
+                        echo "<script type=\"text/javascript\">createIdleTimer();</script>";   
+                    } elseif( $gFunc == 'delete' ) {
+                        UserManager('delete');
+                    } elseif( $gFunc == 'add' ) {
+                        UserManager('add');
                     }
                     $gAction = "display";
                     break;

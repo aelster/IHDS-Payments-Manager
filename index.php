@@ -1,8 +1,6 @@
 <?php
 require_once( 'includes/config.php' );
 
-initialize();
-
 Phase1(); // Anything to do before generating output?
 Phase2(); // Make any updates that are required
 ?>
