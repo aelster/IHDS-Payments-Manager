@@ -820,15 +820,15 @@ function displayDonors() {
     $qual = empty($quals) ? "" : " where " . implode(" and ", $quals);
     
     if( $gArea == "all" ) {
-        $stat = DoQuery( "select sum(amount) from donations where frequency = 'monthlytab'");
+        $stat = DoQuery( "select sum(amount) from donations where frequency = 'monthlytab and success = 1'");
         list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
-        $stat = DoQuery( "select sum(amount) from donations where frequency = 'onetimetab'");
+        $stat = DoQuery( "select sum(amount) from donations where frequency = 'onetimetab' and success = 1");
         list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
     
     } else {
-        $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency = 'monthlytab'");
+        $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency = 'monthlytab' and success = 1");
         list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
-        $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency = 'onetimetab'");
+        $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency = 'onetimetab' and success = 1");
         list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
     }
     
