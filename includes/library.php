@@ -941,7 +941,7 @@ function displayDonors() {
                         $row[$f]);
             } else {
                 echo "<td class=\"sort\">";
-                printf("<input type=text size=$size class=\"ajax\" $ajax_id value=\"%s\" sorttable_customkey=\"%s\"></td>",
+                printf("<input type=text size=$size class=\"ajax\" $ajax_id value='%s' sorttable_customkey=\"%s\"></td>",
                         $row[$f], strtolower($row[$f]));
             }
             echo "</td>";
