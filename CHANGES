@@ -11,3 +11,6 @@ v2.2.2
 v2.2.3
 [rc4 565c24c] DON'T USE " when displaying text. Things break with a " in the data. Needed for hebrew chipchuk
 [rc4 c075438] Only count donations with success = 1
+
+v2.2.4
+[main 71a33dc] fixed checkbox status in AJAX
