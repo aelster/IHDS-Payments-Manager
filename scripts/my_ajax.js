@@ -9,7 +9,8 @@ $(document).ready(function() {
         var user_id = $("#user_id").val(); // User ID making the change
         var x1 = $(this).attr('type');
         var x3 = $(this).prop('checked');
-        if( x1 === "checkbox" ) {
+        var is_debug = target.indexOf('__debug__');
+        if( x1 === "checkbox" && ( is_debug < 0 ) ) {  // The __debug__ value is a bit mask
             if( x3 ) {
                 var new_value = 1;
             } else {
