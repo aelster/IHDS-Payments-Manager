@@ -7,9 +7,14 @@ $(document).ready(function() {
         };
         var target = $(this).attr('id'); // Id of cell that changed
         var user_id = $("#user_id").val(); // User ID making the change
-        if( $(this).type === "boolean" ) {
-            var flag = $(this).val();
-            var new_value = ! flag;
+        var x1 = $(this).attr('type');
+        var x3 = $(this).prop('checked');
+        if( x1 === "checkbox" ) {
+            if( x3 ) {
+                var new_value = 1;
+            } else {
+                var new_value = 0;
+            }
         } else {
             var new_value = $(this).val();
         }
