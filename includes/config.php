@@ -18,16 +18,19 @@ $http_host = $_SERVER['HTTP_HOST'];
 if (preg_match('/^dev.irvinehebrewday.org/', $http_host)) {
     $gProduction = 0;
     $gSiteDir = "/usr/local/site";
+    $gMaxIdleTime = 60;
     $prefix = "";
 
 } elseif ( defined("IN_BACKUP") || preg_match( '/^irvinehebrewday.org/', $http_host) ) {
     $gProduction = 1;
     $gSiteDir = "/home1/joylearn/site";
+    $gMaxIdleTime = 60*10;
     $prefix = "joylearn_";
 
 } elseif ( preg_match( '/^joy-learner.org/', $http_host) ) {
     $gProduction = 1;
     $gSiteDir = "/home1/joylearn/site";
+    $gMaxIdleTime = 60*10;
     $prefix = "joylearn_";
 }
 
@@ -62,6 +65,8 @@ SiteLoad( 'php/library');
 
 if(session_status() === PHP_SESSION_NONE) session_start();
 
+
 selectDB();
+
 
 $user = new User2($gDb = $gPDO[$gDbControlId]['inst']);
