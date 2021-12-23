@@ -317,7 +317,6 @@ function displayBanner() {
                 $gBannerMode = "office";
         }
     }
-    echo "<div id=\"IdleTime\"></div>";
 
     if ($gTrace) {
         array_pop($gFunction);
@@ -699,6 +698,10 @@ function displayPalette() {
             break;
 
         case "welcome":
+            if( ! empty( $gError ) ) {
+                echo "<div class=ErrorMessage>$gError</div>";
+                unset($gError);
+            }
             UserManager("welcome");
             break;
     }
@@ -1115,7 +1118,16 @@ function initialize() {
 
     $gAction = array_key_exists('action', $_POST) ? $_POST["action"] : "welcome";
 
-    $req = $_SERVER['QUERY_STRING'];
+    if( array_key_exists('last_login',$_SESSION)) {
+       $delta = time() - strtotime($_SESSION['last_login'] );
+       error_log( "$delta seconds since last login");
+       if( $delta > $gMaxIdleTime ) {
+           session_unset();
+           $gError = "Session Timed Out";
+           $gAction = "welcome";
+       }
+   }
+   $req = $_SERVER['QUERY_STRING'];
     if (!empty($req)) {
         $tmp = parse_str($req, $qs);
         if (array_key_exists('action', $qs) && $qs['action'] == 'password' &&
@@ -1124,10 +1136,7 @@ function initialize() {
             $gFunc = 'reset';
             $gFrom = 'email';
             $gResetKey = $qs['key'];
-            $sstat = session_status();
-            if( $sstat === PHP_SESSION_NONE || $sstat === PHP_SESSION_ACTIVE ) {
-                session_destroy();
-            }
+
         } elseif (!array_key_exists('XDEBUG_SESSION_START', $qs)) {
             UserManager('logout');
             exit;
@@ -1291,8 +1300,7 @@ function loadMailSettings() {
 function phase1() {     # Phase1 is for pre-output actions that would interfere with PDF production
     include 'includes/globals.php';
 
-    $action = array_key_exists('action', $_POST) ? $_POST['action'] : "home";
-    if ($action == "rimon" || $action == "nachas" || $action == "carol" || $action == "all") {
+    if( in_array( $gAction, array( 'rimon', 'nachas', 'carol', 'all' ) ) ) {
         dumpCSV($action);
         exit();
     }
@@ -1330,6 +1338,12 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
 
     if( $gAction == "backup" ) {
         BackupMySql();
+    }
+
+    if ($gAction == 'logout') {
+        echo "<script type='text/javascript'>\n";
+        echo "cancelIdleTimer();\n";
+        echo "</script>\n";
     }
     
     $val = 0;
