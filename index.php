@@ -8,6 +8,7 @@ Phase2(); // Make any updates that are required
         <div id="banner">
             <div id="site"><?php displaySite(); ?></div>
             <div id="bannerButtons"><?php displayBanner(); ?></div>
+            <div><span id="IdleTime"></span></div>
         </div>
         <div id="content">
             <div id="sidebar"><?php displaySidebar(); ?></div>
@@ -17,13 +18,8 @@ Phase2(); // Make any updates that are required
     <?php
     echo "<script type=\"text/javascript\">\n";
     if ($user->is_logged_in()) {
-        if( $gProduction ) {
-            echo "createIdleTimer();\n";
-        }
+        echo "createIdleTimer($gMaxIdleTime);\n";
         echo "sidebarColor('$gMode');\n";
-//        if( $gMode == 'control' ) {
-//            echo "setDebug($gDebug);\n";
-//        }
     }
     if ($gDebug & $gDebugWindow) {
         echo "if (debugWindow) debugWindow.document.close();\n";
