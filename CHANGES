@@ -14,3 +14,10 @@ v2.2.3
 
 v2.2.4
 [main 71a33dc] fixed checkbox status in AJAX
+
+v2.3.0
+[rc5 33b4a0e] Fix AJAX to distinguish between normal checkboxes (boolean) and debug checkboxes (bit mask)
+[rc5 a649fa0] Update the idle timer to use Config settings
+[rc5 cb93002] New use of idleTime
+[rc5 81832a7] Update for idleTime
+[rc5 bf2d64e]  idle time logout code
