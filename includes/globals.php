@@ -64,6 +64,7 @@ global $gMailSignature;
 global $gMailSignatureImage;
 global $gMailSignatureImageSize;
 global $gMailTesting;
+global $gMaxIdleTime;
 global $gMode;
 global $gModeToButtons;
 global $gPreDreamweaver;
