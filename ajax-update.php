@@ -1,7 +1,10 @@
 <?php
 require_once( 'includes/config.php' );
+include 'includes/globals.php';
 
-$trace = 1;
+$trace = 0;
+$saveDebug = $gDebug;
+$gDebug = 0;
 
 if ($trace) {
     error_log("");
@@ -44,6 +47,7 @@ $response_array = array(
 
 echo json_encode($response_array);
 
+$gDebug = $saveDebug;
 //if( $field == "amount" ) {
 //    if( $dataType == "json" ) {
 //        $answer = sprintf( "{ \"val\": \"\$ %s\" }", number_format($val,2));

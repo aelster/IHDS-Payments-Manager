@@ -669,3 +669,7 @@ society.ajax input[type="button"], input[type="password"], input[type="text"] {
 .society table {
     font-size: .75em;
 }
+
+p.hidden {
+    display: none;
+}

@@ -1,28 +1,38 @@
 <?php
 require_once( 'includes/config.php' );
+include 'includes/globals.php';
 
-Phase1(); // Anything to do before generating output?
-Phase2(); // Make any updates that are required
+checkForDownloads();
+header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0"); // HTTP 1.1.
+header("Pragma: no-cache"); // HTTP 1.0.
+header("Expires: 0"); // Proxies.
+
 ?>
-    <div id="container">
-        <div id="banner">
-            <div id="site"><?php displaySite(); ?></div>
-            <div id="bannerButtons"><?php displayBanner(); ?></div>
-            <div><span id="IdleTime"></span></div>
-        </div>
-        <div id="content">
-            <div id="sidebar"><?php displaySidebar(); ?></div>
-            <div id="palette"><?php phase3(); displayPalette(); ?></div>
-        </div>
-    </div>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <?php addHtmlHeader(); ?>
+    <body>
+        <?php $gPhase = 1; phase1(); # phase1 is for pre-output actions that would interfere with PDF production ?>
+        <?php $gPhase = 2; phase2(); # phase2 is for making updates to the database ?>
+        <div id="container">
+            <div id="banner">
+                <div id="site"><?php displaySite(); ?></div><!-- end #site -->
+                <div id="bannerButtons"><?php displayBanner(); ?></div><!-- end #bannerButtons -->
+                <div><span id="IdleTime"></span></div>
+            </div><!-- end #banner -->
+            <div id="content">
+                <div id="sidebar"><?php displaySidebar(); ?></div><!-- end #sidebar -->
+                <div id="palette"><?php phase3(); displayPalette(); ?></div><!-- end #palette -->
+            </div><!-- end #content -->
+        </div><!-- end #container -->
     <?php
     echo "<script type=\"text/javascript\">\n";
-    if ($user->is_logged_in()) {
+    if ($gUser->is_logged_in()) {
         echo "createIdleTimer($gMaxIdleTime);\n";
         echo "sidebarColor('$gMode');\n";
     }
     if ($gDebug & $gDebugWindow) {
-        echo "if (debugWindow) debugWindow.document.close();\n";
+        //echo "if (debugWindow) debugWindow.document.close();\n";
     }
     echo "</script>\n";
     ?>

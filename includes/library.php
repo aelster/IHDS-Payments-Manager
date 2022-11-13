@@ -101,30 +101,28 @@ function addForm() {
 function addHtmlHeader() {
     include 'includes/globals.php';
     echo <<<EOT
-<!DOCTYPE HTML>
-<html>
-        <head>
-            <script type="text/javascript">var debug_disabled = 0;</script>
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-            <title>$gSiteName</title>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset='utf-8'>
+    <meta http-equiv='Cache-control' content='no-cache'>
+    <title>$gSiteName</title>
 EOT;
     $styles = array();
     $styles[] = "css/Common.css";
     $styles[] = "css/main.css";
 
     $scripts = array();
-    $scripts[] = "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js";    
+    $scripts[] = "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js";
     $scripts[] = "scripts/Common.js";
     $scripts[] = "scripts/sorttable.js";
     $scripts[] = "scripts/my_ajax.js";
+    $scripts[] = "scripts/payments.js";
 
     echo <<<EOT
-    <meta charset='utf-8'>
-    <meta http-equiv='Cache-control' content='no-cache'>
     <link rel='shortcut icon' type='image/x-icon' href='assets/favicon.ico' />
 EOT;
 
-    $force = 1;
+    $force = 0;
 
     if ($force) {
         $tag = rand(0, 1000);
@@ -139,7 +137,14 @@ EOT;
     foreach ($scripts as $script) {
         printf("<script type=\"text/javascript\" src=\"%s$str\"></script>\n", $script);
     }
-    echo "</head>";
+    echo '<script type="text/javascript">debug_disabled = 0;</script>';
+    if ($gEnableJavascriptDebugger) {
+        echo "<script type='text/javascript'>\n";
+        echo "_init()\n";
+        echo "var d = new Date();\n";
+        echo "debug('--- Non-Production. Start of run @ ' + d + ' ---')\n";
+        echo "</script>\n";
+    } echo "</head>";
 }
 
 function addToSidebar($buttons) {
@@ -217,6 +222,9 @@ EOT;
     }
 }
 
+function checkForDownloads() {
+    
+}
 function deleteDonor() {
     include 'includes/globals.php';
     if ($gTrace) {
@@ -228,19 +236,11 @@ function deleteDonor() {
     $obj['user_id'] = $_POST['user_id'];
 
     $id = $_POST['id'];
-    $stmt = DoQuery("select success from donations where id = $id");
-    list( $val ) = $stmt->fetch(PDO::FETCH_NUM);
-    if ($val == 1) { // This is a normal entry
-        $query = "update donations set success = 2 where id = $id";
-        DoQuery($query);
-        $obj['item'] = $query;
-        EventLogRecord($obj);
-    } else { // This should only be visible from control and already deleted
-        $query = "delete from donations where id = $id";
-        DoQuery($query);
-        $obj['item'] = $query;
-        EventLogRecord($obj);
-    }
+    $query = "delete from donations where id = $id";
+    DoQuery($query);
+    $obj['item'] = $query;
+    EventLogRecord($obj);
+
     $gAction = "display";
 }
 
@@ -262,7 +262,7 @@ function displayBanner() {
     if ($gAction == 'logout')
         return;
 
-    if ($user->is_logged_in()) {
+    if ($gUser->is_logged_in()) {
         $jsx = [];
         $jsx[] = "addAction('logout')";
         $js = implode(';', $jsx);
@@ -630,6 +630,10 @@ function displayPalette() {
                     EventLogDisplay();
                     break;
 
+                case "kravmaga":
+                    displayDonors($gArea);
+                    break;
+
                 case "mail":
                     UserMail('display');
                     break;
@@ -699,7 +703,16 @@ function displayPalette() {
 
         case "welcome":
             if( ! empty( $gError ) ) {
-                echo "<div class=ErrorMessage>$gError</div>";
+                echo "<div class=ErrorMessage>";
+                if( is_array($gError) ) {
+                    foreach( $gError as $str ) {
+                        echo "$str<br>";
+                    }
+                } else {
+                    echo "$gError<br>";
+                }
+                echo "</div>";
+                
                 unset($gError);
             }
             UserManager("welcome");
@@ -733,7 +746,7 @@ function displaySidebar() {
     #   label defaults to ucfirst(area)
     #   action defaults to sidebar
 
-    if ($user->is_logged_in()) {
+    if ($gUser->is_logged_in()) {
         $buttons = [];
 
         $skipActions = ['reset', 'start'];
@@ -804,9 +817,12 @@ function displayDonors() {
 
     $control = ($gUserAccess == 'control');
 
+    $onetime = $monthly = 0.0;
+    
     $quals = [];
     switch ($gArea) {
         case "carol":
+        case "kravmaga":
         case "nachas":
         case "rimon":
             $quals[] = "society = \"$society\"";
@@ -825,20 +841,20 @@ function displayDonors() {
     if( $gArea == "all" ) {
         $stat = DoQuery( "select sum(amount) from donations where frequency = 'monthlytab and success = 1'");
         list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
-        $stat = DoQuery( "select sum(amount) from donations where frequency = 'onetimetab' and success = 1");
+        $stat = DoQuery( "select sum(amount) from donations where frequency != 'monthlytab' and success = 1");
         list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
     
     } else {
         $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency = 'monthlytab' and success = 1");
         list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
-        $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency = 'onetimetab' and success = 1");
+        $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency != 'monthlytab' and success = 1");
         list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
     }
     
     $query = "select * from donations" . $qual;
     $query .= " order by lastName asc";
 
-    $fields = ["visible", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
+    $fields = ["visible", "txnId", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
     if ($society == "all") {
         array_splice($fields, 0, 0, ["society", "success"]);
     }
@@ -849,9 +865,9 @@ function displayDonors() {
     . "<input type=button onclick=\"addAction('$society');\" value=\"Download\">";
     
     echo "<br><br>";
-    echo "One Time Total: \$" . number_format($oneTime,2);
+    echo "One Time Total: \$" . number_format(floatval($oneTime),2);
     echo ",&nbsp;&nbsp;";
-    echo "Monthly Totals: \$" . number_format($monthly, 2);
+    echo "Monthly Totals: \$" . number_format(floatval($monthly), 2);
     echo "</div>";
     
     echo "<br>";
@@ -860,6 +876,10 @@ function displayDonors() {
     echo "<ul class=sort>";
     echo "<li>Click on a column header to sort, click again to reverse sort</li>";
     echo "<li>All fields can be edited</li>";
+    if( $control ) {
+        echo "<li>You can see all donations, Office can only see ones marked Visible</li>";
+        echo "<li>To delete an entry, first mark it not visible</li>";
+    }
     echo "</ul>";
 
     echo "<br>";
@@ -905,8 +925,22 @@ function displayDonors() {
                 number_format($row['amount'],2), $row['firstName'], $row['lastName']);
         $jsx[] = "myConfirm('$str')";
         $js = sprintf("onclick=\"%s\"", join(';', $jsx));
+        
+        if( $control ) {
+            echo "<p class=hidden id=del_text_$id><input type=button class=delete value=Del $js></p>";
+        } else {
+            echo "<p class=hidden id=del_text_$id>&nbsp;</p>";            
+        }
+        echo "<td id=del_$id></span></td>";
+        
+        if( $row['visible'] ) {
+            echo "<script type=\"text/javascript\">del_text_clear($id);</script>";
+        } else {
+            echo "<script type=\"text/javascript\">del_text_load($id);</script>";
+        }
+        
 
-        echo "<td><input type=button class=delete $js value=\"Del\"></td>";
+        
         echo "<td>$mysqldate</td>";
         foreach ($fields as $f) {
             $ajax_id = "id=\"donations__{$f}__{$id}\"";
@@ -963,6 +997,7 @@ function displayDonors() {
     echo "<tr>";
     echo "<td class=c><input type=button class=add value=Add $js></td>";
     echo "<td>&nbsp;</td>";
+    $row = [];
     foreach ($fields as $f) {
         $row[$f] = "";
         $tag = MakeTag(implode("_", [$f, $id]));
@@ -980,7 +1015,7 @@ function displayDonors() {
         } elseif( $gArea == "all" && $f == "society" ) {
             echo "<select $tag>";
             $selected = "";
-            foreach (["nachas", "rimon","carol"] as $opt) {
+            foreach (["nachas", "rimon","carol", "kravmaga"] as $opt) {
                 echo "<option value=\"$opt\">$opt</option>";
                 $selected = "selected";
             }
@@ -1021,7 +1056,7 @@ function displaySite() {
         return;
 
     $uname  = "";
-    if( $user->is_logged_in() ) {
+    if( $gUser->is_logged_in() ) {
         $uname = " - $gUserName";
     } elseif( $gAction == "password" && $gFunc == "reset" ) {
         $stat = DoQuery( "select username from users where resetToken = '$gResetKey'" );
@@ -1064,6 +1099,8 @@ function dumpCSV() {
     if ($society == "nachas")
         $quals[] = "society = \"$society\"";
     if ($society == "carol")
+        $quals[] = "society = \"$society\"";
+    if ($society == "kravmaga")
         $quals[] = "society = \"$society\"";
 
     $query = "select * from donations where " . implode(" and ", $quals);
@@ -1227,9 +1264,10 @@ function initialize() {
 //=====================================    
     $mode = 'office';
     $buttons = array();
-    $buttons[] = ['area' => 'carol', 'js' => "setValue('func','show'),setValue('area','carol')"];
-    $buttons[] = ['area' => 'rimon', 'js' => "setValue('func','show'),setValue('area','rimon')"];
-    $buttons[] = ['area' => 'nachas', 'js' => "setValue('func','show'),setValue('area','nachas')"];
+    $stmt = DoQuery( "select distinct society from donations order by society asc");
+    while( list($name) = $stmt->fetch(PDO::FETCH_NUM) ) {
+        $buttons[] = ['area' => "$name", 'js' => "setValue('func','show'),setValue('area','$name')"];
+    }
     $buttons[] = ['area' => 'all', 'js' => "setValue('func','show'),setValue('area','all')"];
 
     $gModeToButtons[$mode] = $buttons;
@@ -1245,51 +1283,58 @@ function loadMailSettings() {
         $gFunction[] = __FUNCTION__;
         Logger();
     }
-    $gMailAdmin = $gMailDefault = $gMailTesting = [];
-    $query = "select label, `value`, enabled from mail where lower(label) like '%email:%'";
+    $gMailAdmin = "";
+    $gMailTesting = [];
 
-    $stmt = DoQuery($query);
-    if ($gPDO_num_rows == 0) {
-        DoQuery("insert into mail (label, value, enabled) values ('Email Server','',0)");
-        DoQuery("insert into mail (label, value, enabled) values ('Email: Default','andy.elster@gmail.com, Andy Elster',1)");
-    }
-
-    $gMailLive = 0;
-    $stmt = DoQuery($query);
-    while (list( $label, $value, $enabled ) = $stmt->fetch(PDO::FETCH_NUM)) {
-        $tmp = preg_split("/,/", $value, NULL, PREG_SPLIT_NO_EMPTY);
-        $j = count($tmp);
-        if ($j == 1) {
-            $email = $name = $tmp[0];
-        } elseif ($j == 2) {
-            $email = $tmp[0];
-            $name = $tmp[1];
-        }
-        if (stripos($label, "admin") !== false) {
-            $gMailAdmin[] = ['email' => "$email", 'name' => "$name"];
-
-            if( $enabled && ! $gProduction) {
-                DoQuery("update mail set enabled = 0 where label = 'Email: Admin'"); # Don't let me send out live emails from home
-                echo "<script type=\"text/javascript\">alert('WARNING: Non-Production Machine: gMailLive forced to off');</script>";
-                $enabled = false;
+    foreach( $gMailModes as $mode ) {
+        DoQuery("select id from mail where mode = '$mode'");
+        if($gPDO_num_rows == 0) {
+            if( $mode == 'Live' ) {
+                DoQuery( "insert into mail (mode, value, enabled) values ('$mode', 'In not enabled, all emails go to enabled Testing accounts', 0)");
+            } elseif( $mode == 'Server' ) {
+                DoQuery( "insert into mail (mode, value, enabled) values ('$mode', 0, 0)");
+            } else {
+                DoQuery("insert into mail (mode, value, enabled) values ('$mode','$gMailDefault',0)"); # set in the Site local-mailer.php
             }
-            $gMailLive = $enabled;
-        } elseif (stripos($label, "default") !== false) {
-            $gMailDefault[] = ['email' => "$email", 'name' => "$name"];
-        } elseif (stripos($label, "backup") !== false) {
-            $gMailBackup[] = ['email' => "$email", 'name' => "$name"];
-        } elseif ($enabled && stripos($label, "testing") !== false) {
-            $gMailTesting[] = ['email' => "$email", 'name' => "$name"];
-        } elseif (stripos($label, "server") !== false) {
-            $gMailServer = $gMailDB[$value];
         }
     }
 
-    if (count($gMailAdmin) == 0) {
-        $gMailAdmin = $gMailDefault;
+    $stmt = DoQuery("select mode, value, enabled from mail");
+    $gMailLive = 0;
+    while (list( $mode, $value, $enabled ) = $stmt->fetch(PDO::FETCH_NUM)) {
+        if( $mode == 'Live' && $enabled ) {
+            $gMailLive = 1;
+            
+        } elseif( $mode == 'Server' ) {
+            $gMailServer = $gMailDB[$value];
+            if( ! array_key_exists('Usertext', $gMailServer ) ) {
+                $gMailServer['Usertext'] = $gMailServer['Username'];
+            }
+            
+        } else {
+            $tmp = preg_split("/,/", $value, 0, PREG_SPLIT_NO_EMPTY);
+            $j = count($tmp);
+            if ($j == 1) {
+                $email = $name = $tmp[0];
+            } elseif ($j == 2) {
+                $email = $tmp[0];
+                $name = $tmp[1];
+            }
+            if( $mode == "Admin" ) {
+                $gMailAdmin = ['email' => "$email", 'name' => "$name"];
+
+            } elseif( $mode == 'Backup' && $enabled ) {
+                $gMailBackup[] = ['email' => "$email", 'name' => "$name"];
+                
+            } elseif( $mode == 'Testing' && $enabled) {
+                $gMailTesting[] = ['email' => "$email", 'name' => "$name"];
+                
+            }
+        }
     }
-    if (count($gMailTesting) == 0) {
-        $gMailTesting = $gMailDefault;
+    
+    if( empty( $gMailAdmin ) ) {
+        $gMailAdmin = $gMailDefault;
     }
 
     if ($gTrace) {
@@ -1300,16 +1345,14 @@ function loadMailSettings() {
 function phase1() {     # Phase1 is for pre-output actions that would interfere with PDF production
     include 'includes/globals.php';
 
-    if( in_array( $gAction, array( 'rimon', 'nachas', 'carol', 'all' ) ) ) {
+    if( in_array( $gAction, array( 'rimon', 'nachas', 'carol', 'kravmaga', 'all' ) ) ) {
         dumpCSV($action);
         exit();
     }
     $dpv_pre = "Begin";
     $dpv_phase = 1;
     $dpv_tag = "pre-html";
-
-    addHtmlHeader();
-
+    
     if ($gDebug) {
         Logger('****************************************************************************');
         DumpPostVars(sprintf("-- %s Phase #%d (%s): gAction: [%s], gFrom: [%s], gMode: [%s], gArea: [%s], gFunc: [%s]",
@@ -1320,15 +1363,6 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
         $gFunction[] = __FUNCTION__;
         Logger();
     }
-    if ($gDebug & $gDebugWindow) {
-        echo "<script type='text/javascript'>\n";
-        $tag = ($gDreamweaver) ? "Dreamweaver" : "";
-        echo "createDebugWindow('$tag');\n";
-        echo "var d = new Date();\n";
-        echo "debug('--- Non-Production. Start of run @ ' + d + ' ---')\n";
-        echo "</script>\n";
-    }
-
     addForm();
 
     if ($gAction == 'login' && $gFunc == 'verify') {
@@ -1347,9 +1381,9 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
     }
     
     $val = 0;
-    if ($user->is_logged_in()) {
+    if ($gUser->is_logged_in()) {
         Logger("user logged in");
-        UserManager('load', $_SESSION['userid']);
+        UserManager('load', $_SESSION['user_id']);
         $saveDb = $gDb;
         $gDb = $gPDO[$gDbControlId]['inst'];
         $stmt = DoQuery( "select priv_id from access where id = $gUserId");
@@ -1357,9 +1391,10 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
         $stmt = DoQuery( "select name from privileges where id = $val");
         list($gUserAccess) = $stmt->fetch(PDO::FETCH_NUM);
         $gDb = $saveDb;
-        echo "<script type=\"text/javascript\">createIdleTimer();</script>";   
-    } else {
+        echo "<script type='text/javascript'>createIdleTimer();</script>";   
+    } else if( $gAction !== 'reset' && $gAction !== 'sendReset') {
         Logger("user not logged in");
+        $gAction = "welcome";
     }
 //    $val = 6;
 
@@ -1400,10 +1435,20 @@ function phase2() { # updates
             break;
 
         case "reset":
-            if ($gFunc == "change") {
+            if( $gArea == 'password' ) {
                 UserManager('reset');
-                $gFunc = "welcome";
             }
+//            else if( $gFunc == 'update' ) {
+//                        UserManager('update');
+//                        $gAction = 'main';
+//                    }
+//                    break;
+            break;
+
+        case 'sendReset': # Email reset link to address
+            UserManager('sendResetLink');
+            $gAction = 'welcome';
+            $gError[] = "alert('Please check your email for a reset link')";
             break;
 
         case "update":
@@ -1422,9 +1467,10 @@ function phase2() { # updates
                     updateMisc();
                     $gAction = "display";
                     break;
-
+                    
                 case "all":
                 case "nachas":
+                case "kravmaga":
                 case "rimon":
                 case "carol":
                     if( $gFunc == 'delete') {
@@ -1440,7 +1486,7 @@ function phase2() { # updates
                         UserManager('mail');
                     } elseif( $gFunc == 'password' ) {
                         UserManager('update');
-                        $user->login($_SESSION['username'],$_POST['newpassword1']);
+                        $gUser->login($_SESSION['username'],$_POST['newpassword1']);
                         Logger("user logged in");
                         UserManager('load', $_SESSION['userid']);
                         $saveDb = $gDb;
@@ -1450,7 +1496,7 @@ function phase2() { # updates
                         $stmt = DoQuery( "select name from privileges where id = $val");
                         list($gUserAccess) = $stmt->fetch(PDO::FETCH_NUM);
                         $gDb = $saveDb;
-                        echo "<script type=\"text/javascript\">createIdleTimer();</script>";   
+                        echo '<script type="text/javascript">createIdleTimer();</script>';   
                     } elseif( $gFunc == 'delete' ) {
                         UserManager('delete');
                     } elseif( $gFunc == 'add' ) {

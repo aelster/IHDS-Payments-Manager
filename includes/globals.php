@@ -38,7 +38,7 @@ global $gDbNames;
 global $gDbNextId;      # Fiscal Year ID for the next year
 global $gDbPrefix;
 global $gDebug;
-global $gDreamweaver;
+global $gEnableJavascriptDebugger;
 global $gEnrollMeFiscalYear;
 global $gEnrollMeKnownStatus;
 global $gError;
@@ -59,15 +59,16 @@ global $gMailBackup;
 global $gMailDB;
 global $gMailDefault;
 global $gMailLive;
+global $gMailModes;
 global $gMailServer;
 global $gMailSignature;
 global $gMailSignatureImage;
 global $gMailSignatureImageSize;
 global $gMailTesting;
+global $gMessage;
 global $gMaxIdleTime;
 global $gMode;
 global $gModeToButtons;
-global $gPreDreamweaver;
 global $gProduction;
 global $gResetKey;
 global $gRosterFiscalYear;
@@ -86,7 +87,7 @@ global $gTrace;
 global $gUserId;
 global $gUserName;
 global $gUserAccess;
-global $gUsers;
+global $gUser;
 
 global $error;
 global $user;           // Object: active user
@@ -179,8 +180,6 @@ $bit6 = 2 ** 6;
 $bit7 = 2 ** 7;
 $bit8 = 2 ** 8;
 $bit9 = 2 ** 9;
-
-$gDreamweaver = 1;
 
 $gMailSignatureImage = 'assets/SignatureImage.png';
 $gMailSignatureImageSize = ['width' => 550, 'height' => 97]; 

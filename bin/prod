@@ -1,0 +1,86 @@
+#!/bin/bash
+
+user=`whoami`
+base="`dirname ~`/$user"
+echo "base: [$base]"
+echo
+
+#==================================================
+
+dest="Common-IHDS-HPS"
+if [ $user = andy ]; then
+    path="/usr/local/site"
+else
+    path="$base/site"
+fi
+
+cd $path
+file=`find . -name "Common-*" -type d -exec basename {} \; | sort -r | head -n 1`
+ln -sfn $file $dest
+s=`readlink $path/$dest`
+printf '%-25s:  %s\n' $dest $file
+
+#==================================================
+
+dest="Site-IHDS-HPS"
+if [ $user = andy ]; then
+    path="/usr/local/site/ihds"
+else
+    path="$base/site/ihds"
+fi
+
+cd $path
+file=`find . -name "php-*" -type d -exec basename {} \; | sort -r | head -n 1`
+ln -sfn $file $dest
+s=`readlink $path/$dest`
+printf '%-25s:  %s\n' $dest $file
+
+#==================================================
+
+dest="gw"
+if [ $user = andy ]; then
+    path="/Users/andy/src/websites/ihds"
+else
+    path="$base/public_html/irvinehebrewday"
+fi
+
+cd $path
+file=`find . -name "IHDS-HPS-*" -type d -exec basename {} \; | sort -r | head -n 1`
+ln -sfn $file $dest
+s=`readlink $path/$dest`
+printf '%-25s:  %s\n' $dest $file
+
+echo
+
+#!************************************************************
+#! Now that links have changed, update/install the links to 
+#! both Common.css and Common.js
+#!************************************************************
+
+if [ "$user" = "joylearn" ]; then
+    cd ~/public_html/irvinehebrewday/$dest/css
+    find . -name "Common.css" -exec rm {} \;
+    ln -s ~/site/Common-IHDS-HPS/css/Common.css Common.css
+
+    cd ../scripts
+    find . -name "Common.js" -exec rm {} \;
+    ln -s ~/site/Common-IHDS-HPS/scripts/Common.js Common.js
+
+    cd ~/public_html/irvinehebrewday/
+    rm kravmaga
+    ln -s gw/kravmaga kravmaga
+else
+    cd ~/src/websites/ihds/$dest/css
+    find . -name "Common.css" -exec rm {} \;
+    ln -s /usr/local/site/Common-IHDS-HPS/css/Common.css Common.css
+
+    cd ../scripts
+    find . -name "Common.js" -exec rm {} \;
+    ln -s /usr/local/site/Common-IHDS-HPS/scripts/Common.js Common.js
+
+    cd ~/src/websites/ihds
+    rm kravmaga
+    ln -s gw/kravmaga kravmaga
+fi
+    
+cd $start_dir
