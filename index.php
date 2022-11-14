@@ -28,7 +28,9 @@ header("Expires: 0"); // Proxies.
     <?php
     echo "<script type=\"text/javascript\">\n";
     if ($gUser->is_logged_in()) {
-        echo "createIdleTimer($gMaxIdleTime);\n";
+        if( $gEnableIdleTimer ) {
+            echo "<script type='text/javascript'>createIdleTimer();</script>";
+        }
         echo "sidebarColor('$gMode');\n";
     }
     if ($gDebug & $gDebugWindow) {

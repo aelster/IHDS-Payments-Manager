@@ -38,6 +38,7 @@ global $gDbNames;
 global $gDbNextId;      # Fiscal Year ID for the next year
 global $gDbPrefix;
 global $gDebug;
+global $gEnableIdleTimer;
 global $gEnableJavascriptDebugger;
 global $gEnrollMeFiscalYear;
 global $gEnrollMeKnownStatus;

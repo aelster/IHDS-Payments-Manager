@@ -697,24 +697,13 @@ function displayPalette() {
 
         case "password":
             if( $gFunc == "reset" ) {
+                UserManager('reset');
+            } elseif( $gFunc == "newpassword" ) {
                 UserManager('newpassword');
             }
             break;
 
         case "welcome":
-            if( ! empty( $gError ) ) {
-                echo "<div class=ErrorMessage>";
-                if( is_array($gError) ) {
-                    foreach( $gError as $str ) {
-                        echo "$str<br>";
-                    }
-                } else {
-                    echo "$gError<br>";
-                }
-                echo "</div>";
-                
-                unset($gError);
-            }
             UserManager("welcome");
             break;
     }
@@ -1058,7 +1047,7 @@ function displaySite() {
     $uname  = "";
     if( $gUser->is_logged_in() ) {
         $uname = " - $gUserName";
-    } elseif( $gAction == "password" && $gFunc == "reset" ) {
+    } elseif( $gAction == "password" && $gFunc == "newpassword" ) {
         $stat = DoQuery( "select username from users where resetToken = '$gResetKey'" );
         if( $gPDO_num_rows  ) {
             list($str) = $stat->fetch(PDO::FETCH_NUM);
@@ -1168,9 +1157,9 @@ function initialize() {
     if (!empty($req)) {
         $tmp = parse_str($req, $qs);
         if (array_key_exists('action', $qs) && $qs['action'] == 'password' &&
-                array_key_exists('func', $qs) && $qs['func'] == 'reset') {
+                array_key_exists('func', $qs) && $qs['func'] == 'newpassword') {
             $gAction = 'password';
-            $gFunc = 'reset';
+            $gFunc = 'newpassword';
             $gFrom = 'email';
             $gResetKey = $qs['key'];
 
@@ -1365,8 +1354,8 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
     }
     addForm();
 
-    if ($gAction == 'login' && $gFunc == 'verify') {
-        Logger("user NOT logged in, verifying password");
+    if ($gAction == 'password' && $gFunc == 'verify') {
+        Logger("Logging in from welcome, verifying password");
         UserManager('verify');
     }
 
@@ -1374,7 +1363,7 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
         BackupMySql();
     }
 
-    if ($gAction == 'logout') {
+    if ($gAction == 'logout' && $gEnableIdleTimer) {
         echo "<script type='text/javascript'>\n";
         echo "cancelIdleTimer();\n";
         echo "</script>\n";
@@ -1391,8 +1380,13 @@ function phase1() {     # Phase1 is for pre-output actions that would interfere 
         $stmt = DoQuery( "select name from privileges where id = $val");
         list($gUserAccess) = $stmt->fetch(PDO::FETCH_NUM);
         $gDb = $saveDb;
-        echo "<script type='text/javascript'>createIdleTimer();</script>";   
-    } else if( $gAction !== 'reset' && $gAction !== 'sendReset') {
+        if( $gEnableIdleTimer ) {
+            echo "<script type='text/javascript'>createIdleTimer();</script>";
+        }
+    } else if( $gAction == 'password' ) {
+        // Don't interfere here
+    } else {
+//        $gAction !== 'reset' && $gAction !== 'sendReset' && $gAction !== 'password' || $gArea !== 'password' ) {
         Logger("user not logged in");
         $gAction = "welcome";
     }
@@ -1434,23 +1428,20 @@ function phase2() { # updates
             addDonor();
             break;
 
-        case "reset":
-            if( $gArea == 'password' ) {
-                UserManager('reset');
+        case "password":
+            if( $gFunc == 'sendreset' ) {
+                UserManager('sendResetLink');
+                if( $gArea == 'users' ) {
+                    $gAction = "display";
+                } else {
+                    $gAction = 'welcome';
+                }
+            } elseif( $gFunc == 'update' ) {
+                UserManager('update');
+                $gAction = 'display';
             }
-//            else if( $gFunc == 'update' ) {
-//                        UserManager('update');
-//                        $gAction = 'main';
-//                    }
-//                    break;
             break;
-
-        case 'sendReset': # Email reset link to address
-            UserManager('sendResetLink');
-            $gAction = 'welcome';
-            $gError[] = "alert('Please check your email for a reset link')";
-            break;
-
+        
         case "update":
             switch ($gArea) {
                 case "debug":
@@ -1468,6 +1459,11 @@ function phase2() { # updates
                     $gAction = "display";
                     break;
                     
+                case 'password':
+                    UserManager('update');
+                    $gAction = 'display';
+                    break;
+                
                 case "all":
                 case "nachas":
                 case "kravmaga":
@@ -1496,7 +1492,9 @@ function phase2() { # updates
                         $stmt = DoQuery( "select name from privileges where id = $val");
                         list($gUserAccess) = $stmt->fetch(PDO::FETCH_NUM);
                         $gDb = $saveDb;
-                        echo '<script type="text/javascript">createIdleTimer();</script>';   
+                        if( $gEnableIdleTimer ) {
+                            echo "<script type='text/javascript'>createIdleTimer();</script>";
+                        }
                     } elseif( $gFunc == 'delete' ) {
                         UserManager('delete');
                     } elseif( $gFunc == 'add' ) {
@@ -1536,11 +1534,30 @@ function phase3() { # display
                         $dpv_pre, $dpv_phase, $dpv_tag, $gAction, $gFrom, $gMode, $gArea, $gFunc));
     }
 
-    if ($gAction == "password") {
-        if ($gFunc == "send") {
-            UserManager("forgot");
-        }
+    switch ($gAction ) {
+        case "password":
+            if ($gFunc == "send") {
+                UserManager("forgot");
+            }
+            break;
+   
+        case "reset":
+            if( $gArea == 'password' ) {
+                UserManager('newpassword');
+            }
+            break;
+
+        case 'sendReset': # Email reset link to address
+            UserManager('sendResetLink');
+            $gAction = 'welcome';
+            $gError = "Please check your email for a reset link";
+            break;
     }
+    
+    if( $gFunc == 'test' ) {
+        UserMail('test');
+    }
+
     if ($gDebug) {
         $dpv_pre = "End";
         DumpPostVars(sprintf("-- %s Phase #%d (%s): gAction: [%s], gFrom: [%s], gMode: [%s], gArea: [%s], gFunc: [%s]",

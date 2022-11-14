@@ -17,12 +17,14 @@ if (preg_match('/^dev.ihds.org/', $http_host) || $http_host == "10.0.0.7" ) {
     $gProduction = 0;
     $gSiteDir = "/usr/local/site";
     $gSiteName = "MacBook Air";
+    $gEnableIdleTimer = false;
     $gMaxIdleTime = 60*30;
     
 } elseif (  defined("IN_BACKUP") || preg_match( '/irvinehebrewday.org/', $_SERVER['HTTP_HOST']) ) {
     $gProduction = 1;
     $gSiteDir = '/home1/joylearn/site';
     $gSiteName = 'irvinehebrewday.org';
+    $gEnableIdleTimer = true;
     $gMaxIdleTime = 60*10;
 }
 
