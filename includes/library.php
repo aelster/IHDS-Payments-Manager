@@ -100,8 +100,13 @@ function addForm() {
 
 function addHtmlHeader() {
     include 'includes/globals.php';
+    
+    echo "<head>";
+header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0"); // HTTP 1.1.
+header("Pragma: no-cache"); // HTTP 1.0.
+header("Expires: 0"); // Proxies.
+
     echo <<<EOT
-<head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta charset='utf-8'>
     <meta http-equiv='Cache-control' content='no-cache'>
@@ -254,7 +259,9 @@ function displayBanner() {
     if ($gAction == 'logout')
         return;
 
-    echo '<div id="site"><?php displaySite(); ?></div><!-- end #site -->';
+    echo "<div id=site>";
+    displaySite();
+    echo "</div><!-- end #site -->";
     
     if ($gUser->is_logged_in()) {
         echo '<div id="bannerButtons">';
