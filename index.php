@@ -15,11 +15,7 @@ header("Expires: 0"); // Proxies.
         <?php $gPhase = 1; phase1(); # phase1 is for pre-output actions that would interfere with PDF production ?>
         <?php $gPhase = 2; phase2(); # phase2 is for making updates to the database ?>
         <div id="container">
-            <div id="banner">
-                <div id="site"><?php displaySite(); ?></div><!-- end #site -->
-                <div id="bannerButtons"><?php displayBanner(); ?></div><!-- end #bannerButtons -->
-                <div><span id="IdleTime"></span></div>
-            </div><!-- end #banner -->
+            <div id="banner"><?php displayBanner(); ?></div><!-- end #banner -->
             <div id="content">
                 <div id="sidebar"><?php displaySidebar(); ?></div><!-- end #sidebar -->
                 <div id="palette"><?php phase3(); displayPalette(); ?></div><!-- end #palette -->

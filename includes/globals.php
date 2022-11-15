@@ -50,7 +50,6 @@ global $gFrom;
 global $gFunc; # used for buttons/actions
 global $gFunction; # used for call tree
 global $gGala;
-global $gId;
 global $gIHDSStatus;
 global $gInFamilies;
 global $gLF;

@@ -7,7 +7,7 @@ echo
 
 #==================================================
 
-dest="Common-IHDS-SOCIETIES"
+dest="Common-IHDS-Societies"
 if [ $user = andy ]; then
     path="/usr/local/site"
 else
@@ -22,7 +22,7 @@ printf '%-25s:  %s\n' $dest $file
 
 #==================================================
 
-dest="Site-IHDS-SOCIETIES"
+dest="Site-IHDS-Societies"
 if [ $user = andy ]; then
     path="/usr/local/site/ihds"
 else
@@ -60,20 +60,20 @@ echo
 if [ "$user" = "joylearn" ]; then
     cd ~/public_html/irvinehebrewday/$dest/css
     rm Common.css
-    ln -s ~/site/Common-IHDS-SOCIETIES/css/Common.css Common.css
+    ln -s ~/site/Common-IHDS-Societies/css/Common.css Common.css
 
     cd ../scripts
     rm Common.js
-    ln -s ~/site/Common-IHDS-SOCIETIES/scripts/Common.js Common.js
+    ln -s ~/site/Common-IHDS-Societies/scripts/Common.js Common.js
 
 else
     cd ~/src/websites/ihds/$dest/css
     rm Common.css
-    ln -s /usr/local/site/Common-IHDS-SOCIETIES/css/Common.css Common.css
+    ln -s /usr/local/site/Common-IHDS-Societies/css/Common.css Common.css
 
     cd ../scripts
     rm Common.js
-    ln -s /usr/local/site/Common-IHDS-SOCIETIES/scripts/Common.js Common.js
+    ln -s /usr/local/site/Common-IHDS-Societies/scripts/Common.js Common.js
 fi
     
 cd $start_dir

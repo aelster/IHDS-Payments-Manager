@@ -244,14 +244,6 @@ function deleteDonor() {
     $gAction = "display";
 }
 
-function deleteMail() {
-    include 'includes/globals.php';
-    $gFunction[] = __FUNCTION__;
-        $id = $gId;
-        DoQuery("delete from mail where id = :id", [':id' => $id]);
-    array_pop($gFunction);
-}
-
 function displayBanner() {
     include 'includes/globals.php';
     if ($gTrace) {
@@ -262,7 +254,10 @@ function displayBanner() {
     if ($gAction == 'logout')
         return;
 
+    echo '<div id="site"><?php displaySite(); ?></div><!-- end #site -->';
+    
     if ($gUser->is_logged_in()) {
+        echo '<div id="bannerButtons">';
         $jsx = [];
         $jsx[] = "addAction('logout')";
         $js = implode(';', $jsx);
@@ -316,8 +311,18 @@ function displayBanner() {
             if (empty($gBannerMode))
                 $gBannerMode = "office";
         }
+        echo '</div><!-- end #bannerButtons -->';
+        echo '<div><span id="IdleTime"></span></div><!-- end IdleTime -->';
     }
-
+    echo '<div id=prod-or-dev>';
+    $str = realpath( '../pm');
+    if( preg_match( '/-dev/', $str ) ) {
+        echo '<p class=dev>Development</p>';
+    } else {
+        echo '<p class=prod>Production</p>';        
+    }
+    echo '</div><!-- end #prod-or-dev -->';
+    
     if ($gTrace) {
         array_pop($gFunction);
     }

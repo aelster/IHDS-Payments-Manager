@@ -17,8 +17,6 @@ if (preg_match('/^dev.ihds.org/', $http_host) || $http_host == "10.0.0.7" ) {
     $gProduction = 0;
     $gSiteDir = "/usr/local/site";
     $gSiteName = "MacBook Air";
-    $gEnableIdleTimer = false;
-    $gMaxIdleTime = 60*30;
     
 } elseif (  defined("IN_BACKUP") || preg_match( '/irvinehebrewday.org/', $_SERVER['HTTP_HOST']) ) {
     $gProduction = 1;
@@ -30,7 +28,7 @@ if (preg_match('/^dev.ihds.org/', $http_host) || $http_host == "10.0.0.7" ) {
 
 $gProject = "IHDS Payment Manager";
 $gSiteSubPath = "ihds";
-$gCommonRoot = $gSiteDir . "/Common-IHDS-SOCIETIES";
+$gCommonRoot = $gSiteDir . "/Common-IHDS-Societies";
 $gWebRoot = dirname($_SERVER["SCRIPT_FILENAME"]);
 $gError = [];
 
@@ -43,11 +41,12 @@ require( "$gSiteDir/PHPMailer/src/Exception.php");
 require( "$gSiteDir/fpdf/fpdf.php");
 
 $path = join(PATH_SEPARATOR, array(
-    $gSiteDir . "/$gSiteSubPath/Site-IHDS-SOCIETIES",
     $gSiteDir . "/Common-IHDS-Societies",
+    $gSiteDir . "/$gSiteSubPath/Site-IHDS-Societies",
     $gSiteDir . "/PHPMailer",
     $gSiteDir . "/fpdf"
     ));
+
 set_include_path(get_include_path() . PATH_SEPARATOR . $path );
 
 include 'includes/globals.php';
@@ -60,8 +59,6 @@ require_once( 'php/SiteLoader.php' );
 SiteLoad( 'php/library');
 
 session_start();
-
-$gDebug = $gDebugWindow;
 
 selectDB();
 

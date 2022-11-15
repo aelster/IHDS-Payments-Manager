@@ -673,3 +673,15 @@ society.ajax input[type="button"], input[type="password"], input[type="text"] {
 p.hidden {
     display: none;
 }
+
+#prod-or-dev {
+    float: right;
+}
+
+#prod-or-dev .dev {
+    background-color: lightgreen;
+}
+
+#prod-or-dev .prod {
+    background-color: red;
+}

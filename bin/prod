@@ -7,7 +7,7 @@ echo
 
 #==================================================
 
-dest="Common-IHDS-HPS"
+dest="Common-IHDS-Societies"
 if [ $user = andy ]; then
     path="/usr/local/site"
 else
@@ -22,7 +22,7 @@ printf '%-25s:  %s\n' $dest $file
 
 #==================================================
 
-dest="Site-IHDS-HPS"
+dest="Site-IHDS-Societies"
 if [ $user = andy ]; then
     path="/usr/local/site/ihds"
 else
@@ -30,14 +30,14 @@ else
 fi
 
 cd $path
-file=`find . -name "php-*" -type d -exec basename {} \; | sort -r | head -n 1`
+file=`find . -name "societies" -type d -exec basename {} \; | sort -r | head -n 1`
 ln -sfn $file $dest
 s=`readlink $path/$dest`
 printf '%-25s:  %s\n' $dest $file
 
 #==================================================
 
-dest="gw"
+dest="pm"
 if [ $user = andy ]; then
     path="/Users/andy/src/websites/ihds"
 else
@@ -45,7 +45,7 @@ else
 fi
 
 cd $path
-file=`find . -name "IHDS-HPS-*" -type d -exec basename {} \; | sort -r | head -n 1`
+file=`find . -name "IHDS-Societies-*" -type d -exec basename {} \; | sort -r | head -n 1`
 ln -sfn $file $dest
 s=`readlink $path/$dest`
 printf '%-25s:  %s\n' $dest $file
@@ -59,28 +59,21 @@ echo
 
 if [ "$user" = "joylearn" ]; then
     cd ~/public_html/irvinehebrewday/$dest/css
-    find . -name "Common.css" -exec rm {} \;
-    ln -s ~/site/Common-IHDS-HPS/css/Common.css Common.css
+    rm Common.css
+    ln -s ~/site/Common-IHDS-Societies/css/Common.css Common.css
 
     cd ../scripts
-    find . -name "Common.js" -exec rm {} \;
-    ln -s ~/site/Common-IHDS-HPS/scripts/Common.js Common.js
+    rm Common.js
+    ln -s ~/site/Common-IHDS-Societies/scripts/Common.js Common.js
 
-    cd ~/public_html/irvinehebrewday/
-    rm kravmaga
-    ln -s gw/kravmaga kravmaga
 else
     cd ~/src/websites/ihds/$dest/css
-    find . -name "Common.css" -exec rm {} \;
-    ln -s /usr/local/site/Common-IHDS-HPS/css/Common.css Common.css
+    rm Common.css
+    ln -s /usr/local/site/Common-IHDS-Societies/css/Common.css Common.css
 
     cd ../scripts
-    find . -name "Common.js" -exec rm {} \;
-    ln -s /usr/local/site/Common-IHDS-HPS/scripts/Common.js Common.js
-
-    cd ~/src/websites/ihds
-    rm kravmaga
-    ln -s gw/kravmaga kravmaga
+    rm Common.js
+    ln -s /usr/local/site/Common-IHDS-Societies/scripts/Common.js Common.js
 fi
     
 cd $start_dir
