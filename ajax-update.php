@@ -2,9 +2,9 @@
 require_once( 'includes/config.php' );
 include 'includes/globals.php';
 
-$trace = 0;
+$trace = 1;
 $saveDebug = $gDebug;
-$gDebug = 0;
+$gDebug = 1;
 
 if ($trace) {
     error_log("");
@@ -19,6 +19,20 @@ list( $table, $field, $id ) = explode("__", $_POST['target'] );
 $val = trim( str_replace('$','', $_POST['val']) );
 if( $field  == "debug" ) {
     $query = "update $table set `$field` = `$field` ^ $val where id = $id";
+} else if( $table == "sections" ) {
+    list($sectionId, $codeId) = explode("_", $id );
+    $stmt = DoQuery( "select discounts from sections where id = $sectionId" );
+    list($discounts) = $stmt->fetch(PDO::FETCH_NUM);
+    $tmp = array_filter(explode(',',$discounts));
+    if( $val == 1 ) {
+        $tmp[] = $codeId;
+    } else {
+        if(($index = array_search($codeId, $tmp ) ) !== false ) {
+            unset($tmp[$index]);
+        }
+    }
+    $str = implode(',',$tmp);
+    $query = "update $table set `discounts` = '$str' where id = $sectionId";
 } else {
     $query = "update $table set `$field` = '$val' where id = $id";
 }
