@@ -735,6 +735,160 @@ function displayPalette() {
     }
 }
 
+function displaySections() {
+    include 'includes/globals.php';
+
+    echo <<<EOT
+<h2>Sections</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Amount</th>
+      <th>Percent?</th>
+      <th>Dollars?</th>
+      <th>Enabled</th>
+      <th>Description</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+EOT;
+
+    $stmt = DoQuery("select * from discounts order by code ASC");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $id = $row['id'];
+        echo "<tr>";
+        $ajax_id = "id=\"discounts__code__$id\"";
+        echo "<td><input type=text size=10 class=ajax $ajax_id value=\"{$row['code']}\"></td>\n";
+
+        $ajax_id = "id=\"discounts__amount__$id\"";
+        echo "<td><input type=text size=5 class=ajax $ajax_id value=\"{$row['amount']}\"></td>\n";
+
+        if ($row['percent']) {
+            $checked = "checked";
+            $val = 0;
+        } else {
+            $checked = "";
+            $val = 1;
+        }
+        $ajax_id = "id=\"discounts__percent__$id\"";
+        echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
+
+        if ($row['dollars']) {
+            $checked = "checked";
+            $val = 0;
+        } else {
+            $checked = "";
+            $val = 1;
+        }
+        $ajax_id = "id=\"discounts__dollars__$id\"";
+        echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
+
+        if ($row['enabled']) {
+            $checked = "checked";
+            $val = 0;
+        } else {
+            $checked = "";
+            $val = 1;
+        }
+        $ajax_id = "id=\"discounts__enabled__$id\"";
+        echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
+
+        $ajax_id = "id=\"discounts__description__$id\"";
+        echo "<td><input type=text class=ajax $ajax_id value=\"{$row['description']}\"</td>\n";
+        
+        $acts = array();
+        $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
+        $acts[] = "setValue('area','discounts')";
+        $acts[] = "setValue('func','del')";
+        $acts[] = "setValue('id', '$id')";
+        $acts[] = "addAction('update')";
+        printf("<td class=center><input type=button onClick=\"%s\" value='Del'></td>", join(';', $acts));
+        echo "</tr>\n";
+    }
+    $id = 0;
+    echo "<tr>";
+    $tag = MakeTag('code_' . $id);
+    $js = "onChange=\"addField('new|code|$id');\"";
+    echo "<td class=center><input type=text $tag size=10 $js></td>\n";
+
+    $tag = MakeTag('amount_' . $id);
+    $js = "onChange=\"addField('new|amount|$id');\"";
+    echo "<td><input type=text $tag size=5 $js></td>\n";
+
+    $checked = "";
+    $val = 1;
+    $tag = MakeTag('percent_' . $id);
+    $js = "onChange=\"addField('new|percent|$id');\"";
+    echo "<td class=center><input class=c type=checkbox $tag $js value=$val $checked></td>\n";
+
+    $checked = "";
+    $val = 1;
+    $tag = MakeTag('dollars_' . $id);
+    $js = "onChange=\"addField('new|dollars|$id');\"";
+    echo "<td class=center><input class=c type=checkbox $tag $js value=$val $checked></td>\n";
+
+    $checked = "";
+    $val = 1;
+    $tag = MakeTag('enabled_' . $id);
+    $js = "onChange=\"addField('new|enabled|$id');\"";
+    echo "<td class=center><input type=checkbox $tag $js value=$val $checked></td>\n";
+
+    $tag = MakeTag('description_' . $id);
+    $js = "onChange=\"addField('new|description|$id');\"";
+    echo "<td><input type=text $tag $js size=30></td>\n";
+    
+    $acts = array();
+    $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
+    $acts[] = "setValue('area','discounts')";
+    $acts[] = "setValue('func','add')";
+    $acts[] = "setValue('id', '$id')";
+    $acts[] = "addAction('update')";
+    printf("<td class=center><input type=button onClick=\"%s\" value='Add    '></td>", join(';', $acts));
+    echo "</tr>\n";
+    echo "</tbody>";
+    echo "</table>";
+    
+    echo "<br>";
+    echo "<h2>Where do they apply?</h2>";
+    echo "<table>";
+    echo "<thead>";
+    echo "<tr>";
+    echo "<th>Code</th>";
+    $section = [];
+    $stmt = DoQuery( "select * from sections order by label asc" );
+    while( list( $id, $label, $discount ) = $stmt->fetch(PDO::FETCH_NUM) ) {
+        $tmp = empty($discount) ? [] : explode(',',$discount);
+        $section[$id] = [ 'id' => $id, 'label' => "$label", 'discounts' => $tmp ];
+        echo "<th>$label</th>";
+    }
+    echo "</tr>";
+    echo "</thead>";
+    
+    $order = array_keys( $section );
+    
+    echo "<tbody>";
+    $stmt = DoQuery( "select id, code from discounts order by code asc" );
+    while( list( $codeId, $code ) = $stmt->fetch(PDO::FETCH_NUM) ) {
+        echo "<tr>";
+        echo "<td class=center>$code</td>";
+        foreach( $order as $sectionId ) {
+            if( in_array($codeId, $section[$sectionId]['discounts']) ) {
+                $checked = "checked";
+                $val = 0;
+            } else {
+                $checked = "";
+                $val = 1;
+            }
+            $ajax_id = "id=\"sections__discounts__{$sectionId}_{$codeId}\"";
+            echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
+        }
+        echo "</tr>";
+    }
+    echo "</tbody>";
+    echo "</table>";                
+}
 function displaySidebar() {
     include 'includes/globals.php';
     if ($gTrace) {
@@ -1102,7 +1256,7 @@ function displayDonors() {
         
 
         
-        echo "<td>$mysqldate</td>";
+        echo "<td sorttable_customkey=\"{$row['time']}\">$mysqldate</td>";
         foreach ($fields as $f) {
             $ajax_id = "id=\"donations__{$f}__{$id}\"";
             $size = array_key_exists($f, $sizes) ? $sizes[$f] : 5;
@@ -1407,6 +1561,7 @@ function initialize() {
     $mode = 'admin';
     $buttons = array();
     $buttons[] = ['area' => 'discounts', 'label' => 'Discounts'];
+    $buttons[] = ['area' => 'sections', 'label' => 'Sections'];
     /*
       $buttons[] = ['area' => 'fees'];
       $buttons[] = ['area' => 'financials',
