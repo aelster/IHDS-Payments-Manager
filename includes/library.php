@@ -632,6 +632,12 @@ function displayPalette() {
                     break;
 
                 case "carol":
+                case "donate":
+                case "kravmaga":
+                case "nachas":
+                case "pto":
+                case "rimon":
+                case "society":
                     displayDonors($gArea);
                     break;
 
@@ -647,10 +653,6 @@ function displayPalette() {
                     EventLogDisplay();
                     break;
 
-                case "kravmaga":
-                    displayDonors($gArea);
-                    break;
-
                 case "mail":
                     UserMail('display');
                     break;
@@ -659,20 +661,16 @@ function displayPalette() {
                     displayMisc();
                     break;
 
-                case "nachas":
-                    displayDonors($gArea);
+                case "payments":
+                    paymentTypeDisplay();
                     break;
 
                 case "privileges":
                     UserManager("privileges");
                     break;
 
-                case "rimon":
-                    displayDonors($gArea);
-                    break;
-
-                case "society":
-                    displayDonors();
+                case "sections":
+                    sectionDisplay();
                     break;
 
                 case "source":
@@ -735,7 +733,51 @@ function displayPalette() {
     }
 }
 
-function displaySections() {
+function paymentTypeDisplay() {
+    include 'includes/globals.php';
+    echo <<<EOT
+<h2>Payment Types</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Label</th>
+      <th>Enabled</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+EOT;
+    $stmt = DoQuery("select * from payments order by label ASC");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $id = $row['id'];
+        echo "<tr>";
+        $ajax_id = "id=\"payments__label__$id\"";
+        echo "<td class=center><input type=text size=8 class=\"ajax\" $ajax_id value=\"{$row['label']}\"></td>\n";
+        
+        if ($row['enabled']) {
+            $checked = "checked";
+            $val = 0;
+        } else {
+            $checked = "";
+            $val = 1;
+        }
+        $ajax_id = "id=\"payments__enabled__$id\"";
+        echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
+
+        $acts = array();
+        $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
+        $acts[] = "setValue('area','payments')";
+        $acts[] = "setValue('func','del')";
+        $acts[] = "setValue('id', '$id')";
+        $acts[] = "addAction('update')";
+        printf("<td class=center><input type=button onClick=\"%s\" value='Del'></td>", join(';', $acts));
+    }
+
+    echo "</tbody>";
+    
+}
+
+function sectionDisplay() {
     include 'includes/globals.php';
 
     echo <<<EOT
@@ -743,47 +785,20 @@ function displaySections() {
 <table>
   <thead>
     <tr>
-      <th>Code</th>
-      <th>Amount</th>
-      <th>Percent?</th>
-      <th>Dollars?</th>
+      <th>Label</th>
       <th>Enabled</th>
-      <th>Description</th>
       <th>Action</th>
     </tr>
   </thead>
   <tbody>
 EOT;
 
-    $stmt = DoQuery("select * from discounts order by code ASC");
+    $stmt = DoQuery("select * from sections order by label ASC");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $id = $row['id'];
         echo "<tr>";
-        $ajax_id = "id=\"discounts__code__$id\"";
-        echo "<td><input type=text size=10 class=ajax $ajax_id value=\"{$row['code']}\"></td>\n";
-
-        $ajax_id = "id=\"discounts__amount__$id\"";
-        echo "<td><input type=text size=5 class=ajax $ajax_id value=\"{$row['amount']}\"></td>\n";
-
-        if ($row['percent']) {
-            $checked = "checked";
-            $val = 0;
-        } else {
-            $checked = "";
-            $val = 1;
-        }
-        $ajax_id = "id=\"discounts__percent__$id\"";
-        echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
-
-        if ($row['dollars']) {
-            $checked = "checked";
-            $val = 0;
-        } else {
-            $checked = "";
-            $val = 1;
-        }
-        $ajax_id = "id=\"discounts__dollars__$id\"";
-        echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
+        $ajax_id = "id=\"sections__label__$id\"";
+        echo "<td><input type=text size=10 class=ajax $ajax_id value=\"{$row['label']}\"></td>\n";
 
         if ($row['enabled']) {
             $checked = "checked";
@@ -792,42 +807,45 @@ EOT;
             $checked = "";
             $val = 1;
         }
-        $ajax_id = "id=\"discounts__enabled__$id\"";
+        $ajax_id = "id=\"sections__enabled__$id\"";
         echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
-
-        $ajax_id = "id=\"discounts__description__$id\"";
-        echo "<td><input type=text class=ajax $ajax_id value=\"{$row['description']}\"</td>\n";
         
         $acts = array();
         $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
-        $acts[] = "setValue('area','discounts')";
+        $acts[] = "setValue('area','sections')";
         $acts[] = "setValue('func','del')";
         $acts[] = "setValue('id', '$id')";
         $acts[] = "addAction('update')";
         printf("<td class=center><input type=button onClick=\"%s\" value='Del'></td>", join(';', $acts));
-        echo "</tr>\n";
+//
+//        $ajax_id = "id=\"sections__description__$id\"";
+//        echo "<td>Description</td>";
+//        echo "<td><textarea rows=2 cols=50 class=ajax $ajax_id value=\"{$row['description']}\"></textarea></td>\n";
+//        echo "</tr>";
+//        
+//        echo "<tr>";
+//        echo "<td>Email Subject</td>";
+//        $ajax_id = "id=\"sections__emailSubject__$id\"";
+//        echo "<td><input type=text class=ajax $ajax_id value=\"{$row['emailSubject']}\"></td>\n";
+//        echo "</tr>";
+//                
+//        echo "<tr>";
+//        echo "<td>Email Distribution</td>";
+//        $ajax_id = "id=\"sections__emailDistribution__$id\"";
+//        echo "<td><input type=text class=ajax $ajax_id value=\"{$row['emailDistribution']}\"></td>\n";
+//        echo "</tr>";
+//        
+//        echo "<tr>";
+//        echo "<td>Email Body</td>";
+//        $ajax_id = "id=\"sections__emailBody__$id\"";
+//        echo "<td><textarea rows=2 cols=50 class=ajax $ajax_id value=\"{$row['emailBody']}\"></textarea></td>\n";
+        echo "</tr>";
     }
     $id = 0;
     echo "<tr>";
-    $tag = MakeTag('code_' . $id);
-    $js = "onChange=\"addField('new|code|$id');\"";
+    $tag = MakeTag('label' . $id);
+    $js = "onChange=\"addField('new|label|$id');\"";
     echo "<td class=center><input type=text $tag size=10 $js></td>\n";
-
-    $tag = MakeTag('amount_' . $id);
-    $js = "onChange=\"addField('new|amount|$id');\"";
-    echo "<td><input type=text $tag size=5 $js></td>\n";
-
-    $checked = "";
-    $val = 1;
-    $tag = MakeTag('percent_' . $id);
-    $js = "onChange=\"addField('new|percent|$id');\"";
-    echo "<td class=center><input class=c type=checkbox $tag $js value=$val $checked></td>\n";
-
-    $checked = "";
-    $val = 1;
-    $tag = MakeTag('dollars_' . $id);
-    $js = "onChange=\"addField('new|dollars|$id');\"";
-    echo "<td class=center><input class=c type=checkbox $tag $js value=$val $checked></td>\n";
 
     $checked = "";
     $val = 1;
@@ -835,59 +853,17 @@ EOT;
     $js = "onChange=\"addField('new|enabled|$id');\"";
     echo "<td class=center><input type=checkbox $tag $js value=$val $checked></td>\n";
 
-    $tag = MakeTag('description_' . $id);
-    $js = "onChange=\"addField('new|description|$id');\"";
-    echo "<td><input type=text $tag $js size=30></td>\n";
-    
     $acts = array();
     $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
-    $acts[] = "setValue('area','discounts')";
+    $acts[] = "setValue('area','sections')";
     $acts[] = "setValue('func','add')";
     $acts[] = "setValue('id', '$id')";
     $acts[] = "addAction('update')";
-    printf("<td class=center><input type=button onClick=\"%s\" value='Add    '></td>", join(';', $acts));
+    printf("<td class=center><input type=button onClick=\"%s\" value='Add'></td>", join(';', $acts));
     echo "</tr>\n";
     echo "</tbody>";
     echo "</table>";
     
-    echo "<br>";
-    echo "<h2>Where do they apply?</h2>";
-    echo "<table>";
-    echo "<thead>";
-    echo "<tr>";
-    echo "<th>Code</th>";
-    $section = [];
-    $stmt = DoQuery( "select * from sections order by label asc" );
-    while( list( $id, $label, $discount ) = $stmt->fetch(PDO::FETCH_NUM) ) {
-        $tmp = empty($discount) ? [] : explode(',',$discount);
-        $section[$id] = [ 'id' => $id, 'label' => "$label", 'discounts' => $tmp ];
-        echo "<th>$label</th>";
-    }
-    echo "</tr>";
-    echo "</thead>";
-    
-    $order = array_keys( $section );
-    
-    echo "<tbody>";
-    $stmt = DoQuery( "select id, code from discounts order by code asc" );
-    while( list( $codeId, $code ) = $stmt->fetch(PDO::FETCH_NUM) ) {
-        echo "<tr>";
-        echo "<td class=center>$code</td>";
-        foreach( $order as $sectionId ) {
-            if( in_array($codeId, $section[$sectionId]['discounts']) ) {
-                $checked = "checked";
-                $val = 0;
-            } else {
-                $checked = "";
-                $val = 1;
-            }
-            $ajax_id = "id=\"sections__discounts__{$sectionId}_{$codeId}\"";
-            echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
-        }
-        echo "</tr>";
-    }
-    echo "</tbody>";
-    echo "</table>";                
 }
 function displaySidebar() {
     include 'includes/globals.php';
@@ -1140,6 +1116,7 @@ function displayDonors() {
         case "kravmaga":
         case "nachas":
         case "rimon":
+        case "pto":
             $quals[] = "society = \"$society\"";
             $quals[] = "success = 1";
             break;
@@ -1151,6 +1128,9 @@ function displayDonors() {
             break;
     }
     
+    if( $gArea == 'kravmaga' ) {
+        kravmagaReport();
+    }
     $qual = empty($quals) ? "" : " where " . implode(" and ", $quals);
     
     if( $gArea == "all" ) {
@@ -1167,7 +1147,7 @@ function displayDonors() {
     }
     
     $query = "select * from donations" . $qual;
-    $query .= " order by lastName asc";
+    $query .= " order by time desc";
 
     $fields = ["visible", "txnId", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
     if ($society == "all") {
@@ -1541,6 +1521,7 @@ function initialize() {
     $buttons[] = ['area' => 'source', 'js' => "setValue('func','display')",
         'bbl' => [['area' => 'source', 'label' => 'Refresh', 'js' => "setValue('func','display')"]]];
     $buttons[] = ['area' => 'backup', 'action' => 'backup'];
+    $buttons[] = ['area' => 'payments', 'action' => 'display'];
     $buttons[] = ['area' => 'eventLog', 'label' => 'Event Log'];
     $buttons[] = ['area' => 'mail',
         'bbl' => [['area' => 'mail', 'action' => 'update', 'label' => 'Update', 'js' => "setValue('func','update')"]]];
@@ -1593,6 +1574,90 @@ function initialize() {
     }
 }
 
+function kravmagaReport() {
+    include 'includes/globals.php';
+    
+    $stmt = DoQuery( "select id, code from discounts" );
+    $dLabels = [];
+    while( list( $id, $code ) = $stmt->fetch(PDO::FETCH_NUM) ) {
+        $dLabels[$id] = $code;
+    }
+    $dLabels[0] = 'n/a';
+       
+    echo "<h2>Signup Totals</h2>";
+    echo "<table>";
+    echo "<thead>";
+    echo "<tr>";
+    echo "<th>Discount</th>";
+    echo "<th>#<br>Family</th>";
+    echo "<th>#<br>Individual</th>";
+    echo "<th>#<br>Mini</th>";
+    echo "<th>#<br>Private</th>";
+    echo "<th>#<br>Semi-Private</th>";
+    echo "</tr>";
+    echo "</thead>";
+    
+    echo "<tbody>";
+    $stmt1 = DoQuery("select distinct discountId from kravmaga ");
+    while( list($did) = $stmt1->fetch(PDO::FETCH_NUM) ) {
+        $query = "select sum(familyCount), sum(individualCount),sum(miniCount),"
+            . " sum(privateCount), sum(semiPrivateCount) from kravmaga"
+            . " where discountId = $did";
+        $stmt2 = DoQuery( $query );
+        list( $familyCount, $individualCount, $miniCount, $privateCount, $semiPrivateCount ) = $stmt2->fetch(PDO::FETCH_NUM);
+        echo "<tr>";
+        echo "<td class=center>$dLabels[$did]</td>"; 
+        echo "<td class=center>$familyCount</td>";
+        echo "<td class=center>$individualCount</td>";
+        echo "<td class=center>$miniCount</td>";
+        echo "<td class=center>$privateCount</td>";
+        echo "<td class=center>$semiPrivateCount</td>";
+        echo "</tr>";
+    }
+    echo "</tbody>";
+    echo "</table>";
+    
+    echo "<br>";
+    
+    echo "<h2>Details</h2>";
+    echo "<table>";
+    echo "<thead>";
+    echo "<tr>";
+    echo "<th>Discount</th>";
+    echo "<th>Name</th>";
+    echo "<th>Phone</th>";
+    echo "<th>Email</th>";
+    echo "<th>Family</th>";
+    echo "<th>Individual</th>";
+    echo "<th>Mini</th>";
+    echo "<th>Private</th>";
+    echo "<th>Semi-Private</th>";
+    echo "</tr>";
+    echo "</thead>";
+    
+    echo "<tbody>";
+    // kravmaga: a; donations: b
+    $query = "select a.*, b.firstName, b.lastName, b.phone, b.email"
+        . " from donations b inner join kravmaga a"
+        . " on a.donationId = b.id"
+        . " where b.success = 1"
+        . " order by a.discountId asc, b.lastName asc";
+    $stmt = DoQuery( $query );
+    while( $row = $stmt->fetch(PDO::FETCH_ASSOC ) ) {
+        echo "<tr>";
+        printf( "<td class=center>%s</td>", $dLabels[$row['discountId']]);
+        $name = $row['lastName'] . ", " . $row['firstName'];
+        printf( "<td class=center>%s</td>", $name);
+        printf( "<td class=center>%s</td>", formatPhone($row['phone']));
+        printf( "<td class=center>%s</td>", $row['email']);
+        foreach( [ 'familyCount', 'individualCount', 'miniCount', 'privateCount', 'semiPrivateCount'] as $fld ) {
+            printf( "<td class=center>%d</td>", $row[$fld]);
+        }        
+        echo "</tr>";
+    }
+    echo "</tbody>";
+    echo "</table>";
+}
 function loadMailSettings() {
     include 'includes/globals.php';
 
@@ -1802,6 +1867,7 @@ function phase2() { # updates
                 case "kravmaga":
                 case "rimon":
                 case "carol":
+                case "pto":
                     if( $gFunc == 'delete') {
                         deleteDonor();
                     } elseif( $gFunc == 'add') {

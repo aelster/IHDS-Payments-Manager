@@ -1,4 +1,5 @@
 <?php
+
 require_once( 'includes/config.php' );
 include 'includes/globals.php';
 
@@ -15,48 +16,54 @@ if ($trace) {
 }
 
 $dataType = $_POST['type'];
-list( $table, $field, $id ) = explode("__", $_POST['target'] );
-$val = trim( str_replace('$','', $_POST['val']) );
-if( $field  == "debug" ) {
+list( $table, $field, $id ) = explode("__", $_POST['target']);
+$val = trim(str_replace('$', '', $_POST['val']));
+if ($field == "debug") {
     $query = "update $table set `$field` = `$field` ^ $val where id = $id";
-} else if( $table == "sections" ) {
-    list($sectionId, $codeId) = explode("_", $id );
-    $stmt = DoQuery( "select discounts from sections where id = $sectionId" );
-    list($discounts) = $stmt->fetch(PDO::FETCH_NUM);
-    $tmp = array_filter(explode(',',$discounts));
-    if( $val == 1 ) {
-        $tmp[] = $codeId;
-    } else {
-        if(($index = array_search($codeId, $tmp ) ) !== false ) {
-            unset($tmp[$index]);
+} else if ($table == "sections") {
+    if ($field == 'discounts') {
+        list($sectionId, $codeId) = explode("_", $id);
+        $stmt = DoQuery("select discounts from sections where id = $sectionId");
+        list($discounts) = $stmt->fetch(PDO::FETCH_NUM);
+        $tmp = array_filter(explode(',', $discounts));
+        if ($val == 1) {
+            $tmp[] = $codeId;
+        } else {
+            if (($index = array_search($codeId, $tmp) ) !== false) {
+                unset($tmp[$index]);
+            }
         }
+        $str = implode(',', $tmp);
+        $query = "update $table set `discounts` = '$str' where id = $sectionId";
+    } else {
+        $query = "update $table set `$field` = '$val' where id = $id";
     }
-    $str = implode(',',$tmp);
-    $query = "update $table set `discounts` = '$str' where id = $sectionId";
 } else {
     $query = "update $table set `$field` = '$val' where id = $id";
 }
-if( $trace ) error_log($query);
+if ($trace)
+    error_log($query);
 
 DoQuery($query);
 
-if($trace) error_log( "# rows updated: " . $gPDO_num_rows );
+if ($trace)
+    error_log("# rows updated: " . $gPDO_num_rows);
 
-EventLogRecord( [
+EventLogRecord([
     'type' => 'update',
     'user_id' => $_POST['user_id'],
-    'item' => $query ] );
+    'item' => $query]);
 
 $refresh = false;
-if( $table == "access" ) {
-    if( $field == "priv_id" ) {
+if ($table == "access") {
+    if ($field == "priv_id") {
         $refresh = true;
     }
 }
 $response_array = array(
     "status" => "success",
     "val" => "$val",
-    "refresh"  => "$refresh"
+    "refresh" => "$refresh"
 );
 
 echo json_encode($response_array);
