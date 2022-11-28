@@ -1157,7 +1157,7 @@ function displayDonors() {
         kravmagaReport();
     }
         
-    $fields = ["visible", "txnId", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
+    $fields = ["visible", "id", "txnId", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
     if ($section == "all") {
         array_splice($fields, 0, 0, ["$section", "success"]);
     }
@@ -1200,6 +1200,7 @@ function displayDonors() {
     echo "</thead>";
 
     $sizes = [];
+    $sizes['txnId'] = '14';
     $sizes['firstName'] = '20';
     $sizes['lastName'] = '20';
     $sizes['section'] = 6;
@@ -1600,35 +1601,42 @@ EOT;
         $dLabels[$id] = $code;
     }
     $dLabels[0] = 'n/a';
-       
+    
+    $colNames = $colHeaders = $colQuery = [];
+    $stmt = DoQuery( "show columns from kravmaga like '%Count'");
+    while( list( $colName ) = $stmt->fetch(PDO::FETCH_NUM) ) {
+        $colNames[] = $colName;
+        $str = preg_replace("/Count/","",$colName );
+        $colHeaders[] = ucfirst($str);
+        $colQuery[] = "sum($colName)";
+    }
+    
     echo "<h2>Signup Totals</h2>";
     echo "<table>";
     echo "<thead>";
     echo "<tr>";
     echo "<th>Discount</th>";
-    echo "<th>#<br>Family</th>";
-    echo "<th>#<br>Individual</th>";
-    echo "<th>#<br>Mini</th>";
-    echo "<th>#<br>Private</th>";
-    echo "<th>#<br>Semi-Private</th>";
+    foreach( $colHeaders as $colName ) {
+        echo "<th>#<br>$colName</th>";
+    }
     echo "</tr>";
     echo "</thead>";
     
+    $tmp = [];
     echo "<tbody>";
     $stmt1 = DoQuery("select distinct discountId from kravmaga ");
     while( list($did) = $stmt1->fetch(PDO::FETCH_NUM) ) {
-        $query = "select sum(familyCount), sum(individualCount),sum(miniCount),"
-            . " sum(privateCount), sum(semiPrivateCount) from kravmaga"
+        $sums = 0;
+        
+        $query = "select " . implode(',',$colQuery) . "from kravmaga"
             . " where discountId = $did and visible = 1";
         $stmt2 = DoQuery( $query );
-        list( $familyCount, $individualCount, $miniCount, $privateCount, $semiPrivateCount ) = $stmt2->fetch(PDO::FETCH_NUM);
+        $row = $stmt2->fetch(PDO::FETCH_NUM);
         echo "<tr>";
-        echo "<td class=center>$dLabels[$did]</td>"; 
-        echo "<td class=center>$familyCount</td>";
-        echo "<td class=center>$individualCount</td>";
-        echo "<td class=center>$miniCount</td>";
-        echo "<td class=center>$privateCount</td>";
-        echo "<td class=center>$semiPrivateCount</td>";
+        echo "<td class=center>$dLabels[$did]</td>";
+        for( $i = 0; $i < count($colNames); $i++ ) {
+            echo "<td class=center>" . $row[$i] . "</td>";
+        }
         echo "</tr>";
     }
     echo "</tbody>";
@@ -1641,20 +1649,19 @@ EOT;
     echo "<thead>";
     echo "<tr>";
     echo "<th>Discount</th>";
+    echo "<th>Inv#</th>";
     echo "<th>Name</th>";
     echo "<th>Phone</th>";
     echo "<th>Email</th>";
-    echo "<th>Family</th>";
-    echo "<th>Individual</th>";
-    echo "<th>Mini</th>";
-    echo "<th>Private</th>";
-    echo "<th>Semi-Private</th>";
+    foreach( $colHeaders as $colName ) {
+        echo "<th>$colName</th>";
+    }
     echo "</tr>";
     echo "</thead>";
     
     echo "<tbody>";
     // kravmaga: a; donations: b
-    $query = "select a.*, b.firstName, b.lastName, b.phone, b.email"
+    $query = "select a.*, b.id, b.firstName, b.lastName, b.phone, b.email"
         . " from donations b inner join kravmaga a"
         . " on a.donationId = b.id"
         . " where b.success = 1 and b.visible = 1"
@@ -1663,12 +1670,13 @@ EOT;
     while( $row = $stmt->fetch(PDO::FETCH_ASSOC ) ) {
         echo "<tr>";
         printf( "<td class=center>%s</td>", $dLabels[$row['discountId']]);
+        printf( "<td class=center>%d</td>", $row['id']);
         $name = $row['lastName'] . ", " . $row['firstName'];
         printf( "<td class=center>%s</td>", $name);
         printf( "<td class=center>%s</td>", formatPhone($row['phone']));
         printf( "<td class=center>%s</td>", $row['email']);
-        foreach( [ 'familyCount', 'individualCount', 'miniCount', 'privateCount', 'semiPrivateCount'] as $fld ) {
-            printf( "<td class=center>%d</td>", $row[$fld]);
+        foreach( $colNames as $colName ) {
+            printf( "<td class=center>%d</td>", $row[$colName]);
         }        
         echo "</tr>";
     }
