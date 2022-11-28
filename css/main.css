@@ -577,7 +577,7 @@ td.contract-terms {
     background-color: yellow;
 }
 
-table.society {
+table.section {
     font-size: 10pt;
 }
 
@@ -634,7 +634,7 @@ table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sor
     content: " \25B4\25BE" 
 }
 
-society.ajax input[type="button"], input[type="password"], input[type="text"] {
+section.ajax input[type="button"], input[type="password"], input[type="text"] {
     font-size: 1em;
     border-radius: 0;
     padding: 0;
@@ -667,7 +667,7 @@ society.ajax input[type="button"], input[type="password"], input[type="text"] {
     font-size: .75em;
 }
 
-.society table {
+.section table {
     font-size: .75em;
 }
 

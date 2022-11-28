@@ -31,11 +31,17 @@ $(document).ready(function() {
             type: "POST",
             url: "ajax-update.php",
             dataType: format,
-            data: {type:format, user_id:user_id, target:target, val:new_value}
+            data: {type:format, user_id:user_id, target:target, val:new_value, section:section}
         }).done(function(req,status,err) {
             if( req.refresh ) {
-                setValue('func','users');
-                addAction('Main');
+                if( section == 'kravmaga' ) {
+                    setValue('area', section);
+                    setValue('func','show');
+                    addAction('display');
+                } else {
+                    setValue('func','users');
+                    addAction('display');
+                }
             }
             ;
         }).fail(function(req,status,err) {

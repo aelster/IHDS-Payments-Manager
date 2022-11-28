@@ -1,3 +1,5 @@
+var section;
+
 function del_text_load(id) {
     var e1 = document.getElementById('del_text_' + id );
     var e2 = document.getElementById('del_' + id );

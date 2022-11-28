@@ -18,7 +18,7 @@ function addDonor() {
     while (list( $fld, $xtype) = $stmt->fetch(PDO::FETCH_NUM)) {
         if ($fld == "id")
             continue;
-        if ($fld == "society") {
+        if ($fld == "section") {
             $i++;
             $args[$i] = "`$fld` = :v$i";
             $vals[":v$i"] = $_POST[$fld . "_$id"];
@@ -247,6 +247,12 @@ function deleteDonor() {
     $obj['item'] = $query;
     EventLogRecord($obj);
 
+    if( $gArea == "kravmaga" ) {
+        $query = "delete from kravmaga where donationId = $id";
+        DoQuery($query);
+        $obj['item'] = $query;
+        EventLogRecord($obj);
+    }
     $gAction = "display";
 }
 
@@ -637,7 +643,7 @@ function displayPalette() {
                 case "nachas":
                 case "pto":
                 case "rimon":
-                case "society":
+                case "section":
                     displayDonors($gArea);
                     break;
 
@@ -1104,12 +1110,13 @@ EOT;
 function displayDonors() {
     include 'includes/globals.php';
 
-    $society = $_POST['area'];
+    $section = $_POST['area'];
 
     $control = ($gUserAccess == 'control');
 
     $onetime = $monthly = 0.0;
     
+    error_log( "gArea : $gArea" );
     $quals = [];
     switch ($gArea) {
         case "carol":
@@ -1117,47 +1124,48 @@ function displayDonors() {
         case "nachas":
         case "rimon":
         case "pto":
-            $quals[] = "society = \"$society\"";
+            $quals[] = "section = \"$section\"";
             $quals[] = "success = 1";
+            $quals[] = "visible = 1";
+            
+            $query = "select sum(amount) from donations where frequency = 'monthlytab' and " . implode(" and ", $quals);
+            $stat = DoQuery($query);        
+            list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
+
+            $query = "select sum(amount) from donations where frequency != 'monthlytab' and " . implode(" and ", $quals);
+            $stat = DoQuery($query);        
+            list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
+
             break;
 
         case "all":
-            if (!$control) {
-                $quals[] = "success = 1";
-            }
+            $quals[] = "success = 1";
+            $quals[] = "visible = 1";
+
+            $query = "select sum(amount) from donations where frequency = 'monthlytab' and " . implode(" and ", $quals);
+            $stat = DoQuery($query);        
+            list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
+
+            $query = "select sum(amount) from donations where frequency != 'monthlytab' and " . implode(" and ", $quals);
+            $stat = DoQuery($query);        
+            list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
+            
             break;
     }
     
     if( $gArea == 'kravmaga' ) {
         kravmagaReport();
     }
-    $qual = empty($quals) ? "" : " where " . implode(" and ", $quals);
-    
-    if( $gArea == "all" ) {
-        $stat = DoQuery( "select sum(amount) from donations where frequency = 'monthlytab and success = 1'");
-        list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
-        $stat = DoQuery( "select sum(amount) from donations where frequency != 'monthlytab' and success = 1");
-        list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
-    
-    } else {
-        $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency = 'monthlytab' and success = 1");
-        list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
-        $stat = DoQuery( "select sum(amount) from donations" . $qual . " and frequency != 'monthlytab' and success = 1");
-        list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
-    }
-    
-    $query = "select * from donations" . $qual;
-    $query .= " order by time desc";
-
+        
     $fields = ["visible", "txnId", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
-    if ($society == "all") {
-        array_splice($fields, 0, 0, ["society", "success"]);
+    if ($section == "all") {
+        array_splice($fields, 0, 0, ["$section", "success"]);
     }
 
     echo "<br>";
     echo "<div class=\"employees tight_table\">"
     . "<div class=\"status\" id=statusBox>-</div><br>"
-    . "<input type=button onclick=\"addAction('$society');\" value=\"Download\">";
+    . "<input type=button onclick=\"addAction('$section');\" value=\"Download\">";
     
     echo "<br><br>";
     echo "One Time Total: \$" . number_format(floatval($oneTime),2);
@@ -1180,7 +1188,7 @@ function displayDonors() {
     echo "<br>";
     echo "<br>";
 
-    echo "<table class=\"society sortable scrollable\">";
+    echo "<table class=\"section sortable scrollable\">";
     echo "<thead>";
     echo "<tr>";
     echo "<th>Act</th>";
@@ -1194,7 +1202,7 @@ function displayDonors() {
     $sizes = [];
     $sizes['firstName'] = '20';
     $sizes['lastName'] = '20';
-    $sizes['society'] = 6;
+    $sizes['section'] = 6;
     $sizes['amount'] = '8';
     $sizes['address'] = '30';
     $sizes['city'] = '20';
@@ -1203,6 +1211,10 @@ function displayDonors() {
     $sizes['email'] = '30';
 
     echo "<tbody>";
+    array_pop( $quals ); // This is really ugly, but it removes the visible qualifier
+    $query = "select * from donations where " . implode(' and ', $quals );
+    $query .= " order by time desc";
+
     $stmt = DoQuery($query);
     $num = 0;
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -1212,16 +1224,16 @@ function displayDonors() {
         $mysqldate = date('m/d/Y H:m', $phpdate);
         $id = $row['id'];
 
-        $jsx = [];
-        $jsx[] = "setValue('id',$id)";
-        $jsx[] = "setValue('area','$society')";
-        $jsx[] = "setValue('func','delete')";
-        $str = sprintf( "Are you sure you want to delete the \$ %s donation from %s %s?",
-                number_format($row['amount'],2), $row['firstName'], $row['lastName']);
-        $jsx[] = "myConfirm('$str')";
-        $js = sprintf("onclick=\"%s\"", join(';', $jsx));
-        
         if( $control ) {
+            $jsx = [];
+            $jsx[] = "setValue('id',$id)";
+            $jsx[] = "setValue('area','$section')";
+            $jsx[] = "setValue('func','delete')";
+            $str = sprintf( "Are you sure you want to delete the \$ %s donation from %s %s?",
+                    number_format($row['amount'],2), $row['firstName'], $row['lastName']);
+            $jsx[] = "myConfirm('$str')";
+            $js = sprintf("onclick=\"%s\"", join(';', $jsx));
+
             echo "<p class=hidden id=del_text_$id><input type=button class=delete value=Del $js></p>";
         } else {
             echo "<p class=hidden id=del_text_$id>&nbsp;</p>";            
@@ -1285,7 +1297,7 @@ function displayDonors() {
     $id = 0;
     $jsx = [];
     $jsx[] = "setValue('id',$id)";
-    $jsx[] = "setValue('area','$society')";
+    $jsx[] = "setValue('area','$section')";
     $jsx[] = "setValue('func','add')";
     $jsx[] = "addAction('update')";
     $js = sprintf("onclick=\"%s\"", join(';', $jsx));
@@ -1307,7 +1319,7 @@ function displayDonors() {
                 echo "<option value=\"$opt\" $selected>$opt</option>";
                 $selected = "";
             }
-        } elseif( $gArea == "all" && $f == "society" ) {
+        } elseif( $gArea == "all" && $f == "section" ) {
             echo "<select $tag>";
             $selected = "";
             foreach (["nachas", "rimon","carol", "kravmaga"] as $opt) {
@@ -1331,8 +1343,8 @@ function displayDonors() {
         $tag = MakeTag(implode("_", [$f, $id]));
         echo "<input type=hidden $tag value=\"$v\"></input>";
     }
-    if( $society != "all" ) {
-        $tag = MakeTag(implode("_", ['society', $id]));
+    if( $section != "all" ) {
+        $tag = MakeTag(implode("_", ['section', $id]));
         echo "<input type=hidden $tag value=\"$gArea\"></input>";
     }
     echo "</tr>";
@@ -1372,31 +1384,31 @@ function displaySite() {
 function dumpCSV() {
     include 'includes/globals.php';
 
-    $society = func_get_arg(0);
+    $section = func_get_arg(0);
     
     if(func_num_args() == 1 ) { # Manual Download
-        $file = "Donor Report - $society.csv";
+        $file = "Donor Report - $section.csv";
         header('Content-Type: application/csv');
         header('Content-Disposition: attachment; filename="' . $file . '";');
         $fh = fopen('php://output', 'w');
         $mode = "manual";
         
     } else {
-        $file = "$gSiteDir/tmp/Donor-Report-$society.csv";
+        $file = "$gSiteDir/tmp/Donor-Report-$section.csv";
         $fh = fopen($file, "w");
         $mode = "cron";
     }
 
     $quals = [];
     $quals[] = "success = 1";
-    if ($society == "rimon")
-        $quals[] = "society = \"$society\"";
-    if ($society == "nachas")
-        $quals[] = "society = \"$society\"";
-    if ($society == "carol")
-        $quals[] = "society = \"$society\"";
-    if ($society == "kravmaga")
-        $quals[] = "society = \"$society\"";
+    if ($section == "rimon")
+        $quals[] = "section = \"$section\"";
+    if ($section == "nachas")
+        $quals[] = "section = \"$section\"";
+    if ($section == "carol")
+        $quals[] = "section = \"$section\"";
+    if ($section == "kravmaga")
+        $quals[] = "section = \"$section\"";
 
     $query = "select * from donations where " . implode(" and ", $quals);
 
@@ -1562,7 +1574,7 @@ function initialize() {
 //=====================================    
     $mode = 'office';
     $buttons = array();
-    $stmt = DoQuery( "select distinct society from donations order by society asc");
+    $stmt = DoQuery( "select distinct section from donations order by section asc");
     while( list($name) = $stmt->fetch(PDO::FETCH_NUM) ) {
         $buttons[] = ['area' => "$name", 'js' => "setValue('func','show'),setValue('area','$name')"];
     }
@@ -1577,6 +1589,11 @@ function initialize() {
 function kravmagaReport() {
     include 'includes/globals.php';
     
+    echo <<<EOT
+<script type="text/javascript">
+    section = 'kravmaga';
+</script>
+EOT;
     $stmt = DoQuery( "select id, code from discounts" );
     $dLabels = [];
     while( list( $id, $code ) = $stmt->fetch(PDO::FETCH_NUM) ) {
@@ -1602,7 +1619,7 @@ function kravmagaReport() {
     while( list($did) = $stmt1->fetch(PDO::FETCH_NUM) ) {
         $query = "select sum(familyCount), sum(individualCount),sum(miniCount),"
             . " sum(privateCount), sum(semiPrivateCount) from kravmaga"
-            . " where discountId = $did";
+            . " where discountId = $did and visible = 1";
         $stmt2 = DoQuery( $query );
         list( $familyCount, $individualCount, $miniCount, $privateCount, $semiPrivateCount ) = $stmt2->fetch(PDO::FETCH_NUM);
         echo "<tr>";
@@ -1640,7 +1657,7 @@ function kravmagaReport() {
     $query = "select a.*, b.firstName, b.lastName, b.phone, b.email"
         . " from donations b inner join kravmaga a"
         . " on a.donationId = b.id"
-        . " where b.success = 1"
+        . " where b.success = 1 and b.visible = 1"
         . " order by a.discountId asc, b.lastName asc";
     $stmt = DoQuery( $query );
     while( $row = $stmt->fetch(PDO::FETCH_ASSOC ) ) {

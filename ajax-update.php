@@ -5,13 +5,13 @@ include 'includes/globals.php';
 
 $trace = 1;
 $saveDebug = $gDebug;
-$gDebug = 1;
+$gDebug = $gDebugErrorLog;
 
 if ($trace) {
     error_log("");
-    error_log("-------------");
+    error_log( "ajax-update: " . "-------------");
     foreach ($_POST as $key => $val) {
-        error_log("_POST[$key] = [$val]");
+        error_log("ajax-update: ". "_POST[$key] = [$val]");
     }
 }
 
@@ -38,6 +38,16 @@ if ($field == "debug") {
     } else {
         $query = "update $table set `$field` = '$val' where id = $id";
     }
+} else if( $table == 'donations' )  {
+    $query = "update $table set `$field` = '$val' where id = $id";
+    if( $field == "visible" ) {
+        if( $_POST['section'] == 'kravmaga' ) {
+            $query2 = "update kravmaga set visible = '$val' where donationId = $id";
+            if( $trace)
+                error_log($query2);
+            DoQuery($query2);
+        }
+    }
 } else {
     $query = "update $table set `$field` = '$val' where id = $id";
 }
@@ -59,6 +69,8 @@ if ($table == "access") {
     if ($field == "priv_id") {
         $refresh = true;
     }
+} else if( $table == "donations" && $field == "visible" ) {
+    $refresh = true;
 }
 $response_array = array(
     "status" => "success",
