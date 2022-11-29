@@ -543,26 +543,22 @@ function displayMisc() {
         echo "<tr>";
         echo "<td class=col1>$label</td>";
 
+        $ajax_id = "id=\"misc__value__{$id}\"";
         $tag = MakeTag("value_$id");
-        $js = "onChange=\"addField('$label|value|$id');toggleBgRed('update');\"";
-        echo "<td class=col2><input class='col2' size=60 $tag $js value='" . $row['value'] . "'></td>";
+        echo "<td class=col2><input class='col2 ajax' size=60 $ajax_id value='" . $row['value'] . "'></td>";
 
-        $tag = MakeTag("enabled_$id");
-        $acts = array();
-        $acts[] = "addField('$label|enabled|$id')";
-        $acts[] = "setValue('from','" . __FUNCTION__ . "')";
-        $acts[] = "setValue('area','misc')";
-        $acts[] = "setValue('func','update')";
-        $acts[] = "setValue('id', '$id')";
-        $acts[] = "setValue('key', '$label')";
-        $acts[] = "addAction('update')";
-        $checked = empty($row['enabled']) ? "" : "checked";
-        printf("<td class='col3 c'><input $tag type='checkbox' onchange=\"%s\" value=1 $js $checked></td>", implode(";", $acts));
+        if( empty($row['enabled']) )  {
+            $checked = "";
+            $val = 1;
+        } else {
+            $checked = "checked";
+            $val = 0;
+        }
+        $ajax_id = "id=\"misc__enabled__{$id}\"";
+        printf("<td class='col3 c'><input class=ajax type='checkbox' $ajax_id  value=$val  $checked></td>");
 
-        $tag = MakeTag("DueBy_$id");
-        $js = "onChange=\"addField('$label|DueBy|$id');toggleBgRed('update');\"";
-        $checked = empty($row['enabled']) ? "" : "checked";
-        echo "<td class='col4 c'><input class='col4' size=3 $tag $js value='" . $row['DueBy'] . "'></td>";
+        $ajax_id = "id=\"misc__DueBy__{$id}\"";
+        echo "<td class='col4 c'><input class='ajax' size=3 $ajax_id value='" . $row['DueBy'] . "'></td>";
 
         $acts = array();
         $acts[] = "setValue('from','MiscDisplay')";
@@ -584,23 +580,23 @@ function displayMisc() {
     echo "<td class=col1><input $tag type='text' size=15 $js value='-- enter label --'></td>";
 
     $tag = MakeTag('value_' . $id);
-    $js = "onChange=\"addField('new|value|$id');toggleBgRed('add');\"";
+    $js = "onChange=\"toggleBgRed('add');\"";
     echo "<td class=col2><input $tag type='text' size=60 $js></td>";
 
     $tag = MakeTag('enabled_' . $id);
-    $js = "onChange=\"addField('new|enabled|$id');toggleBgRed('add');\"";
+    $js = "onChange=\"toggleBgRed('add');\"";
     echo "<td class='col3 c'><input $tag type='checkbox' value=1 $js></td>";
 
     $tag = MakeTag('DueBy_' . $id);
-    $js = "onChange=\"addField('new|DueBy|$id');toggleBgRed('update');\"";
+    $js = "onChange=\"toggleBgRed('add');\"";
     echo "<td class='col4 c'><input class='col4' size=3 $tag $js value=0></td>";
 
     $tag = MakeTag('add');
     $acts = array();
-    $acts[] = "addField('new|label|$id')";
-    $acts[] = "addField('new|value|$id')";
-    $acts[] = "addField('new|enabled|$id')";
-    $acts[] = "addField('new|DueBy|$id')";
+    $acts[] = "addField('label|$id')";
+    $acts[] = "addField('value|$id')";
+    $acts[] = "addField('enabled|$id')";
+    $acts[] = "addField('DueBy|$id')";
     $acts[] = "setValue('from','MiscDisplay')";
     $acts[] = "setValue('area','misc')";
     $acts[] = "setValue('func','add')";
@@ -1991,6 +1987,33 @@ function phase3() { # display
     if ($gTrace) {
         array_pop($gFunction);
     }
+}
+
+function updateMisc() {
+    include( 'includes/globals.php' );
+    $gFunction[] = __FUNCTION__;
+
+    $id = $_POST['id'];
+    if( $gFunc == "del" ) {
+        DoQuery( "delete from misc where id = $id");
+
+    } elseif( $gFunc == "add" )  {
+        $str = htmlspecialchars($_POST['fields']);
+        $tmp = explode(',', $str);
+        $pairs = [];
+        foreach( $tmp as $str ) {
+            list( $key, $val ) = explode('|',$str);
+            if( array_key_exists( "{$key}_0", $_POST ) ) {
+                $val2 = $_POST["{$key}_0"];
+            } else {
+                $val2 = 0;
+            }
+            $vals[] = "$key = '$val2'";
+        }
+        $query = "insert into misc set " . implode(',', $vals );
+        DoQuery($query);
+    }
+    array_pop($gFunction);
 }
 
 function xxresetMail() {
