@@ -1645,6 +1645,7 @@ EOT;
     echo "<thead>";
     echo "<tr>";
     echo "<th>Discount</th>";
+    echo "<th>Time</th>";
     echo "<th>Inv#</th>";
     echo "<th>Name</th>";
     echo "<th>Phone</th>";
@@ -1657,15 +1658,16 @@ EOT;
     
     echo "<tbody>";
     // kravmaga: a; donations: b
-    $query = "select a.*, b.id, b.firstName, b.lastName, b.phone, b.email"
+    $query = "select a.*, b.id, b.time, b.firstName, b.lastName, b.phone, b.email"
         . " from donations b inner join kravmaga a"
         . " on a.donationId = b.id"
         . " where b.success = 1 and b.visible = 1"
-        . " order by a.discountId asc, b.lastName asc";
+        . " order by a.discountId asc, b.time desc";
     $stmt = DoQuery( $query );
     while( $row = $stmt->fetch(PDO::FETCH_ASSOC ) ) {
         echo "<tr>";
         printf( "<td class=center>%s</td>", $dLabels[$row['discountId']]);
+        printf( "<td class=center>%s</td>", $row['time']);
         printf( "<td class=center>%d</td>", $row['id']);
         $name = $row['lastName'] . ", " . $row['firstName'];
         printf( "<td class=center>%s</td>", $name);
