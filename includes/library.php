@@ -1653,12 +1653,13 @@ EOT;
     foreach( $colHeaders as $colName ) {
         echo "<th>$colName</th>";
     }
+    echo "<th>Detail</th>";
     echo "</tr>";
     echo "</thead>";
     
     echo "<tbody>";
     // kravmaga: a; donations: b
-    $query = "select a.*, b.id, b.time, b.firstName, b.lastName, b.phone, b.email"
+    $query = "select a.*, b.id, b.time, b.firstName, b.lastName, b.phone, b.email, b.orderDetail"
         . " from donations b inner join kravmaga a"
         . " on a.donationId = b.id"
         . " where b.success = 1 and b.visible = 1"
@@ -1675,7 +1676,8 @@ EOT;
         printf( "<td class=center>%s</td>", $row['email']);
         foreach( $colNames as $colName ) {
             printf( "<td class=center>%d</td>", $row[$colName]);
-        }        
+        }
+        printf( "<td><textarea rows=2 cols=20>%s</textarea></td", $row['orderDetail']);        
         echo "</tr>";
     }
     echo "</tbody>";
