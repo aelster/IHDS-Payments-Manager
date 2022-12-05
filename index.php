@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once( 'includes/config.php' );
 include 'includes/globals.php';
 

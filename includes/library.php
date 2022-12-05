@@ -328,14 +328,6 @@ function displayBanner() {
         echo '</div><!-- end #bannerButtons -->';
         echo '<div><span id="IdleTime"></span></div><!-- end IdleTime -->';
     }
-    echo '<div id=prod-or-dev>';
-    $str = realpath( '../pm');
-    if( preg_match( '/-dev/', $str ) ) {
-        echo '<p class=dev>Development</p>';
-    } else {
-        echo '<p class=prod>Production</p>';        
-    }
-    echo '</div><!-- end #prod-or-dev -->';
     
     if ($gTrace) {
         array_pop($gFunction);

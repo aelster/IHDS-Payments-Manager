@@ -9,7 +9,7 @@ echo
 #==================================================
 # Select a link target for the Common library
 #===========================
-dest="Common-IHDS-Societies"
+dest="Common-IHDS-Payments-Manager"
 #==================================================
 
 if [ $user = andy ]; then
@@ -59,59 +59,6 @@ fi
 
 #==================================================
 #==================================================
-# Select a link target for the Site Directory
-#===========================
-dest="Site-IHDS-Societies"
-#==================================================
-
-if [ $user = andy ]; then
-    path="/usr/local/site/ihds"
-else
-    path="$base/site/ihds"
-fi
-
-cd $path
-echo
-echo "Defining $dest ...";
-targets=(`find . -name "societies*" -type d -exec basename {} \; | sort -r | head -n 5`)
-
-current=`readlink $dest`
-
-echo
-echo "Select a target: (current: $current)"
-echo
-
-for i in ${!targets[@]}; do
-    tgt=${targets[$i]}
-    if [ "$tgt" == "$current" ]; then
-        note="  ** current link **"
-    else
-        note=" "
-    fi
-    echo "  #$((i+1)): $tgt     $note"
-done
-echo
-
-re='^[0-9]+$'
-read -p "Enter target # (<CR> to skip): " -n 1 releaseNum
-if  [[ "$releaseNum" = "" ]] ||
-    ! [[ $releaseNum =~ $re ]] ||
-    [[ $releaseNum -gt ${#targets[@]} ]]; then
-    update=0
-else
-    update=1
-    echo
-    target=${targets[$((releaseNum-1))]}
-fi
-
-if [ "$update" -eq 1 ]; then
-    rm $dest
-    ln -s $target $dest
-    printf '  %s now points to %s\n' $dest `readlink $dest`
-fi
-
-#==================================================
-#==================================================
 # Select a link target for the Software Release
 #===========================
 dest="pm"
@@ -126,7 +73,7 @@ fi
 cd $path
 echo
 echo "Defining $dest ...";
-targets=("societies-dev" `find . -name "IHDS-Societies-*" -type d -exec basename {} \; | sort -r | head -n 5`)
+targets=("payments-manager" `find . -name "IHDS-Payments-Manager-*" -type d -exec basename {} \; | sort -r | head -n 5`)
 
 current=`readlink $dest`
 
@@ -172,11 +119,11 @@ fi
 if [ "$user" = "joylearn" ]; then
     cd ~/public_html/irvinehebrewday/$dest/css
     find . -name "Common.css" -exec rm {} \;
-    ln -s ~/site/Common-IHDS-Societies/css/Common.css Common.css
+    ln -s ~/site/Common-IHDS-Payments-Manager/css/Common.css Common.css
 
     cd ../scripts
     find . -name "Common.js" -exec rm {} \;
-    ln -s ~/site/Common-IHDS-Societies/scripts/Common.js Common.js
+    ln -s ~/site/Common-IHDS-Payments-Manager/scripts/Common.js Common.js
 
     cd ~/public_html/irvinehebrewday/$dest
     ln -s ../vendor_new vendor
@@ -184,42 +131,15 @@ if [ "$user" = "joylearn" ]; then
 else
     cd ~/src/websites/ihds/$dest/css
     find . -name "Common.css" -exec rm {} \;
-    ln -s /usr/local/site/Common-IHDS-Societies/css/Common.css Common.css
+    ln -s /usr/local/site/Common-IHDS-Payments-Manager/css/Common.css Common.css
 
     cd ../scripts
     find . -name "Common.js" -exec rm {} \;
-    ln -s /usr/local/site/Common-IHDS-Societies/scripts/Common.js Common.js
+    ln -s /usr/local/site/Common-IHDS-Payments-Manager/scripts/Common.js Common.js
 
     cd ~/src/websites/ihds/$dest
     ln -s ../vendor_new vendor
 
 fi
-    
-#!************************************************************
-#!************************************************************
-#! Now add special links
-#!************************************************************
 
-if [ "$user" = "joylearn" ]; then
-    cd ~/public_html/irvinehebrewday/
-
-#!    for path in donate kravmaga kravmaga-ihds nachas pto
-#!    do
-#!        echo "path: [$path]"
-#!        rm $path
-#!        ln -s $dest/redirect $path
-#!    done
-
-else
-    cd ~/src/websites/ihds/
-
-#!    for path in donate kravmaga kravmaga-ihds nachas pto
-#!    do
-#!        echo "path: [$path]"
-#!        rm $path
-#!        ln -s $dest/redirect $path
-#!    done
-
-fi
-    
 cd $start_dir

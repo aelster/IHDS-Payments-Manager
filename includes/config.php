@@ -28,7 +28,7 @@ if (preg_match('/^dev.ihds.org/', $http_host) || $http_host == "10.0.0.7" ) {
 
 $gProject = "IHDS Payment Manager";
 $gSiteSubPath = "ihds";
-$gCommonRoot = $gSiteDir . "/Common-IHDS-Societies";
+$gCommonRoot = $gSiteDir . "/Common-IHDS-Payments-Manager";
 $gWebRoot = dirname($_SERVER["SCRIPT_FILENAME"]);
 $gError = [];
 
@@ -41,8 +41,8 @@ require( "$gSiteDir/PHPMailer/src/Exception.php");
 require( "$gSiteDir/fpdf/fpdf.php");
 
 $path = join(PATH_SEPARATOR, array(
-    $gSiteDir . "/Common-IHDS-Societies",
-    $gSiteDir . "/$gSiteSubPath/Site-IHDS-Societies",
+    $gSiteDir . "/Common-IHDS-Payments-Manager",
+    $gSiteDir . "/$gSiteSubPath/payments",
     $gSiteDir . "/PHPMailer",
     $gSiteDir . "/fpdf"
     ));
@@ -53,12 +53,12 @@ include 'includes/globals.php';
 include 'includes/library.php';
 
 include 'local-mailer.php';
-include 'local-ihds-societies.php';
+include 'local-portico.php';
+include 'local-payments.php';
 
 require_once( 'php/SiteLoader.php' );
 SiteLoad( 'php/library');
 
-session_start();
 
 selectDB();
 
