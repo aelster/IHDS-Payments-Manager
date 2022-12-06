@@ -1,9 +1,10 @@
 <?php
+session_start();
 
 require_once( 'includes/config.php' );
 include 'includes/globals.php';
 
-$trace = 1;
+$trace = 0;
 $saveDebug = $gDebug;
 $gDebug = $gDebugErrorLog;
 

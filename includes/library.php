@@ -635,6 +635,10 @@ function displayPalette() {
                     displayDonors($gArea);
                     break;
 
+                case "categories":
+                    displayCategories();
+                    break;
+                
                 case "debug":
                     MyDebug("display");
                     break;
@@ -1094,6 +1098,76 @@ EOT;
     echo "</tbody>";
     echo "</table>";                
 }
+function displayCategories() {
+    include 'includes/globals.php';
+
+    echo <<<EOT
+<h2>Categories</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Description</th>
+      <th>Amount</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+EOT;
+
+    $rank = 0;
+    
+    $stmt = DoQuery("select * from categories order by myRank ASC, description ASC");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $rank += 10;
+        $id = $row['id'];
+        DoQuery( "update categories set myRank = $rank where id = $id");
+        echo "<tr>";
+
+        $ajax_id = "id=\"categories__myRank__$id\"";
+        echo "<td><input type=text size=2 class=\"ajax center\" $ajax_id value=\"{$row['myRank']}\"</td>\n";
+
+        $ajax_id = "id=\"categories__description__$id\"";
+        echo "<td><input type=text class=ajax $ajax_id value=\"{$row['description']}\"</td>\n";
+
+        $ajax_id = "id=\"categories__amount__$id\"";
+        $str = "$ " . number_format($row['amount'],0);
+        echo "<td><input type=text size=5 class=ajax $ajax_id value=\"$str\"></td>\n";
+
+        $acts = array();
+        $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
+        $acts[] = "setValue('area','categories')";
+        $acts[] = "setValue('func','del')";
+        $acts[] = "setValue('id', '$id')";
+        $acts[] = "addAction('update')";
+        printf("<td class=center><input type=button onClick=\"%s\" value='Del'></td>", join(';', $acts));
+        echo "</tr>\n";
+    }
+    $id = 0;
+    echo "<tr>";
+    $tag = MakeTag('myRank_' . $id);
+    $js = "onChange=\"addField('new|myRank|$id');\"";
+    echo "<td class=center><input type=text $tag size=3 $js></td>\n";
+
+    $tag = MakeTag('description_' . $id);
+    $js = "onChange=\"addField('new|description|$id');\"";
+    echo "<td class=center><input type=text $tag size=30 $js></td>\n";
+
+    $tag = MakeTag('amount_' . $id);
+    $js = "onChange=\"addField('new|amount|$id');\"";
+    echo "<td><input type=text $tag size=5 $js></td>\n";
+    
+    $acts = array();
+    $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
+    $acts[] = "setValue('area','categories')";
+    $acts[] = "setValue('func','add')";
+    $acts[] = "setValue('id', '$id')";
+    $acts[] = "addAction('update')";
+    printf("<td class=center><input type=button onClick=\"%s\" value='Add'></td>", join(';', $acts));
+    echo "</tr>\n";
+    echo "</tbody>";
+    echo "</table>";              
+}
 
 function displayDonors() {
     include 'includes/globals.php';
@@ -1353,17 +1427,17 @@ function displaySite() {
 
     $uname  = "";
     if( $gUser->is_logged_in() ) {
-        $uname = " - $gUserName";
+        $uname = "$gUserName";
     } elseif( $gAction == "password" && $gFunc == "newpassword" ) {
         $stat = DoQuery( "select username from users where resetToken = '$gResetKey'" );
         if( $gPDO_num_rows  ) {
             list($str) = $stat->fetch(PDO::FETCH_NUM);
-            $uname = " - $str";
+            $uname = "$str";
         }
     }
-    $mode = (! $gMailLive) ? " - <span class=mail-test>Mail Safe</span>" : " - <span class=mail-live>** Mail Live **</span>";
+    $mode = (! $gMailLive) ? "<span class=mail-test>Mail Safe</span>" : "<span class=mail-live>** Mail Live **</span>";
 
-    echo "IHDS Societies Manager (<span id=site-prod>{$gSiteName}{$uname}{$mode}</span>): ";
+    echo "$gSiteName (<span id=site-prod>User: {$uname}, {$mode}</span>): ";
 
     if ($gTrace) {
         array_pop($gFunction);
@@ -1451,16 +1525,16 @@ function initialize() {
 
     $gAction = array_key_exists('action', $_POST) ? $_POST["action"] : "welcome";
 
-    if( array_key_exists('last_login',$_SESSION)) {
-       $delta = time() - strtotime($_SESSION['last_login'] );
-       error_log( "$delta seconds since last login");
-       if( $delta > $gMaxIdleTime ) {
-           session_unset();
-           $gError = "Session Timed Out";
-           $gAction = "welcome";
-       }
-   }
-   $req = $_SERVER['QUERY_STRING'];
+    if (array_key_exists('last_login', $_SESSION)) {
+        $delta = time() - strtotime($_SESSION['last_login']);
+        error_log("$delta seconds since last login");
+        if ($delta > $gMaxIdleTime) {
+            session_unset();
+            $gError = "Session Timed Out";
+            $gAction = "welcome";
+        }
+    }
+    $req = $_SERVER['QUERY_STRING'];
     if (!empty($req)) {
         $tmp = parse_str($req, $qs);
         if (array_key_exists('action', $qs) && $qs['action'] == 'password' &&
@@ -1469,7 +1543,6 @@ function initialize() {
             $gFunc = 'newpassword';
             $gFrom = 'email';
             $gResetKey = $qs['key'];
-
         } elseif (!array_key_exists('XDEBUG_SESSION_START', $qs)) {
             UserManager('logout');
             exit;
@@ -1479,7 +1552,6 @@ function initialize() {
     $proto = ( array_key_exists('HTTPS', $_SERVER) && $_SERVER['HTTPS'] == "on" ) ? "https" : "http";
     $gSourceCode = sprintf("%s://%s%s", $proto, $_SERVER['SERVER_NAME'], $_SERVER['SCRIPT_NAME']);
     $gFunction = array();
-
 
     $tmp = ['action', 'area', 'from', 'func', 'mode', 'where'];
     foreach ($tmp as $name) {
@@ -1542,6 +1614,7 @@ function initialize() {
 //=====================================    
     $mode = 'admin';
     $buttons = array();
+    $buttons[] = ['area' => 'categories', 'label' => 'Categories'];
     $buttons[] = ['area' => 'discounts', 'label' => 'Discounts'];
     $buttons[] = ['area' => 'sections', 'label' => 'Sections'];
     /*
@@ -1563,8 +1636,8 @@ function initialize() {
 //=====================================    
     $mode = 'office';
     $buttons = array();
-    $stmt = DoQuery( "select distinct section from donations order by section asc");
-    while( list($name) = $stmt->fetch(PDO::FETCH_NUM) ) {
+    $stmt = DoQuery("select distinct section from donations order by section asc");
+    while (list($name) = $stmt->fetch(PDO::FETCH_NUM)) {
         $buttons[] = ['area' => "$name", 'js' => "setValue('func','show'),setValue('area','$name')"];
     }
     $buttons[] = ['area' => 'all', 'js' => "setValue('func','show'),setValue('area','all')"];
@@ -1859,6 +1932,11 @@ function phase2() { # updates
                     $gAction = "display";
                     break;
 
+                case "categories":
+                    updateCategories();
+                    $gAction = "display";
+                    break;
+                
                 case "discounts":
                     updateDiscounts();
                     $gAction = "display";
@@ -2142,6 +2220,36 @@ function updateDiscounts() {
     } elseif ($gFunc == 'del') {
         $id = $_POST['id'];
         DoQuery("delete from discounts where id = :id", [':id' => $id]);
+    }
+}
+function updateCategories() {
+    include 'includes/globals.php';
+    if ($gFunc == 'add') {
+        $v = preg_split('/,/', $_POST['fields'], 0, PREG_SPLIT_NO_EMPTY);
+        $flds = array_unique($v);
+        $qx = [];
+        $args = [];
+        $i = 0;
+        $ok = 1;
+        foreach ($flds as $fld) {
+            list( $label, $colName, $id ) = preg_split('/\|/', $fld);
+            $var = implode("_", [$colName, $id]);
+            if (array_key_exists($var, $_POST) && !empty($_POST[$var])) {
+                $val = $_POST[$var];
+                $qx[] = sprintf("`%s` = :v%d", $colName, $i);
+                $args[":v$i"] = $val;
+                $i++;
+            }
+        }
+        $query = "insert into categories set " . join(',', $qx);
+        if ($ok) {
+            Logger("query: [$query]");
+            Logger("args: [" . print_r($args, true) . "]");
+            DoQuery($query, $args);
+        }
+    } elseif ($gFunc == 'del') {
+        $id = $_POST['id'];
+        DoQuery("delete from categories where id = :id", [':id' => $id]);
     }
 }
 
