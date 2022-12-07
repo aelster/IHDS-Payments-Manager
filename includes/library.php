@@ -111,6 +111,11 @@ header("Expires: 0"); // Proxies.
     <meta charset='utf-8'>
     <meta http-equiv='Cache-control' content='no-cache'>
     <title>$gSiteName</title>
+ <meta property="og:local" content="en_US">
+ <meta property="og:type" content="website">
+ <meta property="og:title" content="IHDS Payments Manager">
+ <meta property="og:url" content="https://irvinehebrewday.org/pm">
+ <meta property="og:description" content="Manage IHDS payments, reports and configuration">
 EOT;
     $styles = array();
     $styles[] = "css/Common.css";
@@ -1106,6 +1111,7 @@ function displayCategories() {
 <table>
   <thead>
     <tr>
+      <th>Id</th>
       <th>Rank</th>
       <th>Description</th>
       <th>Amount</th>
@@ -1124,6 +1130,8 @@ EOT;
         DoQuery( "update categories set myRank = $rank where id = $id");
         echo "<tr>";
 
+        echo "<td class=center>$id</td>";
+        
         $ajax_id = "id=\"categories__myRank__$id\"";
         echo "<td><input type=text size=2 class=\"ajax center\" $ajax_id value=\"{$row['myRank']}\"</td>\n";
 
@@ -1145,6 +1153,8 @@ EOT;
     }
     $id = 0;
     echo "<tr>";
+    echo "<td>&nbsp;</td>";
+    
     $tag = MakeTag('myRank_' . $id);
     $js = "onChange=\"addField('new|myRank|$id');\"";
     echo "<td class=center><input type=text $tag size=3 $js></td>\n";
@@ -2241,6 +2251,17 @@ function updateCategories() {
                 $i++;
             }
         }
+        $id = rand(1000, 9999);
+        $numFound = 1;
+        while( $numFound > 0 ) {
+            $stmt = DoQuery( "select count(id) from categories where id = $id" );
+            list($numFound) = $stmt->fetch(PDO::FETCH_NUM);
+            if( $numFound > 0 ) {
+                $id = rand(1000,9999);
+            } 
+        }
+        $qx[] = sprintf("`%s` = :v%d", 'id', $i);
+        $args[":v$i"] = $id;
         $query = "insert into categories set " . join(',', $qx);
         if ($ok) {
             Logger("query: [$query]");
