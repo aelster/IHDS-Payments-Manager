@@ -4,7 +4,7 @@ session_start();
 require_once( 'includes/config.php' );
 include 'includes/globals.php';
 
-$trace = 0;
+$trace = 1;
 $saveDebug = $gDebug;
 $gDebug = $gDebugErrorLog;
 

@@ -790,6 +790,7 @@ function sectionDisplay() {
     <tr>
       <th>Label</th>
       <th>Enabled</th>
+      <th>Emails</th>
       <th>Action</th>
     </tr>
   </thead>
@@ -812,6 +813,9 @@ EOT;
         }
         $ajax_id = "id=\"sections__enabled__$id\"";
         echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
+        
+        $ajax_id = "id=\"sections__email__$id\"";
+        echo "<td class=center><textarea rows=4 cols=50 class=ajax $ajax_id>{$row['email']}</textarea></td>\n";
         
         $acts = array();
         $acts[] = sprintf("setValue('from','%s')", __FUNCTION__);
@@ -1192,6 +1196,7 @@ function displayDonors() {
     $quals = [];
     switch ($gArea) {
         case "carol":
+        case "donate":
         case "kravmaga":
         case "nachas":
         case "rimon":
