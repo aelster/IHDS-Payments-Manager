@@ -24,7 +24,7 @@ function addDonor() {
             $vals[":v$i"] = $_POST[$fld . "_$id"];
             continue;
         }
-        if ($fld == "success") {
+        if ($fld == "success" || $fld == "visible") {
             $i++;
             $args[$i] = "`$fld` = :v$i";
             $vals[":v$i"] = 1;
@@ -51,7 +51,13 @@ function addDonor() {
             case "varchar":
                 $i++;
                 $args[$i] = "`$fld` = :v$i";
-                $vals[":v$i"] = $_POST[$fld . "_$id"];
+                $key = $fld . "_$id";
+                if( array_key_exists($key, $_POST ) ) {
+                    $val = $_POST[$key];
+                } else {
+                    $val = '';
+                }
+                $vals[":v$i"] = $val;
                 break;
         }
     }
@@ -526,7 +532,7 @@ function displayMisc() {
     echo "<th class=col1>Label</th>";
     echo "<th class=col2>Value</th>";
     echo "<th class=col3>Enabled</th>";
-    echo "<th class=col4>Due By</th>";
+    echo "<th class=col4>Privilege<br>Level</th>";
     echo "<th class=col5>Action</th>";
     echo "</tr>";
     echo "</thead>";
@@ -554,8 +560,16 @@ function displayMisc() {
         $ajax_id = "id=\"misc__enabled__{$id}\"";
         printf("<td class='col3 c'><input class=ajax type='checkbox' $ajax_id  value=$val  $checked></td>");
 
-        $ajax_id = "id=\"misc__DueBy__{$id}\"";
-        echo "<td class='col4 c'><input class='ajax' size=3 $ajax_id value='" . $row['DueBy'] . "'></td>";
+        $ajax_id = "id=\"misc__privilegeLevel__{$id}\"";
+        echo "<td class='col4 c'>";
+        echo "<select class='ajax' $ajax_id>";
+        foreach( $gAccessLevels as $name ) {
+            $selected = ( $row['privilegeLevel'] == $gAccessNameToId[$name]) ? "selected" : "";
+            echo "<option value=" . $gAccessNameToId[$name] . " $selected>$name</option>";
+            
+        }
+        echo "</select>";
+        echo "</td>";
 
         $acts = array();
         $acts[] = "setValue('from','MiscDisplay')";
@@ -584,7 +598,7 @@ function displayMisc() {
     $js = "onChange=\"toggleBgRed('add');\"";
     echo "<td class='col3 c'><input $tag type='checkbox' value=1 $js></td>";
 
-    $tag = MakeTag('DueBy_' . $id);
+    $tag = MakeTag('privilegeLevel_' . $id);
     $js = "onChange=\"toggleBgRed('add');\"";
     echo "<td class='col4 c'><input class='col4' size=3 $tag $js value=0></td>";
 
@@ -593,7 +607,7 @@ function displayMisc() {
     $acts[] = "addField('label|$id')";
     $acts[] = "addField('value|$id')";
     $acts[] = "addField('enabled|$id')";
-    $acts[] = "addField('DueBy|$id')";
+    $acts[] = "addField('privilegeLevel|$id')";
     $acts[] = "setValue('from','MiscDisplay')";
     $acts[] = "setValue('area','misc')";
     $acts[] = "setValue('func','add')";
@@ -1271,6 +1285,7 @@ function displayDonors() {
     echo "<th>Act</th>";
     echo "<th>Date/Time</th>";
     foreach ($fields as $f) {
+        if( $f == 'all' ) continue;
         printf("<th>%s</th>", ucfirst($f));
     }
     echo "</tr>\n";
@@ -1328,6 +1343,7 @@ function displayDonors() {
         
         echo "<td sorttable_customkey=\"{$row['time']}\">$mysqldate</td>";
         foreach ($fields as $f) {
+            if( $f == 'all' ) continue;
             $ajax_id = "id=\"donations__{$f}__{$id}\"";
             $size = array_key_exists($f, $sizes) ? $sizes[$f] : 5;
             if ($f == "amount") {
@@ -1585,6 +1601,7 @@ function initialize() {
         DoQuery($query, [':name' => 'control', ':level' => 500, ':enabled' => 1]);
         DoQuery($query, [':name' => 'admin', ':level' => 400, ':enabled' => 0]);
         DoQuery($query, [':name' => 'office', ':level' => 300, ':enabled' => 0]);
+        DoQuery($query, [':name' => 'all', ':level' => 0, ':enabled' => 0]);
         $stmt = DoQuery('select * from privileges order by level desc');
     }
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -1632,6 +1649,8 @@ function initialize() {
     $buttons[] = ['area' => 'categories', 'label' => 'Categories'];
     $buttons[] = ['area' => 'discounts', 'label' => 'Discounts'];
     $buttons[] = ['area' => 'sections', 'label' => 'Sections'];
+    $buttons[] = ['area' => 'misc',
+        'bbl' => [['area' => 'misc', 'action' => 'update', 'label' => 'Update', 'js' => "setValue('func','update')"]]];
     /*
       $buttons[] = ['area' => 'fees'];
       $buttons[] = ['area' => 'financials',
@@ -1972,12 +1991,18 @@ function phase2() { # updates
                     $gAction = 'display';
                     break;
                 
+                case 'privileges':
+                    UserManager('update');
+                    $gAction = 'display';
+                    break;
+                
                 case "all":
-                case "nachas":
-                case "kravmaga":
-                case "rimon":
                 case "carol":
+                case "donate":
+                case "kravmaga":
+                case "nachas":
                 case "pto":
+                case "rimon":
                     if( $gFunc == 'delete') {
                         deleteDonor();
                     } elseif( $gFunc == 'add') {
@@ -2103,67 +2128,6 @@ function updateMisc() {
         DoQuery($query);
     }
     array_pop($gFunction);
-}
-
-function xxresetMail() {
-    include 'includes/globals.php';
-    include 'local_mailer.php';
-
-    if ($gTrace) {
-        $gFunction[] = __FUNCTION__;
-        Logger();
-    }
-    $gMailAdmin = $gMailDefault = $gMailTesting = [];
-    $query = "select label, `value`, enabled, DueBy from misc where lower(label) like '%email:%'";
-
-    $stmt = DoQuery($query);
-    if ($gPDO_num_rows == 0) {
-        DoQuery("insert into misc (label, value, enabled) values ('Email Server','',0)");
-        DoQuery("insert into misc (label, value, enabled) values ('Email: Default','andy.elster@gmail.com, Andy Elster',1)");
-        DoQuery("insert into misc (label, value, enabled) values ('First Payment','',0)");
-        DoQuery("insert into misc (label, value, enabled) values ('Materials & Supplies Due Date','',0)");
-        DoQuery("insert into misc (label, value, enabled) values ('Forms Due Date','',0)");
-    }
-    if (!$gProduction) {
-        DoQuery("update misc set enabled = 0 where label = 'Email: Admin'");
-        DoQuery("update misc set value = 'Dev' where label = 'Site_Name'");
-    }
-
-    $gTestModeEnabled = 1;
-    $stmt = DoQuery($query);
-    while (list( $label, $value, $enabled, $dueBy ) = $stmt->fetch(PDO::FETCH_NUM)) {
-        $tmp = preg_split("/,/", $value, NULL, PREG_SPLIT_NO_EMPTY);
-        $j = count($tmp);
-        if ($j == 1) {
-            $email = $name = $tmp[0];
-        } elseif ($j == 2) {
-            $email = $tmp[0];
-            $name = $tmp[1];
-        }
-        if (stripos($label, "admin") !== false) {
-            $gMailAdmin[] = ['email' => "$email", 'name' => "$name"];
-            $gTestModeEnabled = !$enabled;
-        } elseif (stripos($label, "default") !== false) {
-            $gMailDefault[] = ['email' => "$email", 'name' => "$name"];
-        } elseif (stripos($label, "backup") !== false) {
-            $gMailBackup[] = ['email' => "$email", 'name' => "$name"];
-        } elseif ($enabled && stripos($label, "testing") !== false) {
-            $gMailTesting[] = ['email' => "$email", 'name' => "$name"];
-        } elseif (stripos($label, "server") !== false) {
-            $gMailServer = $gMailDB[$dueBy];
-        }
-    }
-
-    if (count($gMailAdmin) == 0) {
-        $gMailAdmin = $gMailDefault;
-    }
-    if (count($gMailTesting) == 0) {
-        $gMailTesting = $gMailDefault;
-    }
-
-    if ($gTrace) {
-        array_pop($gFunction);
-    }
 }
 
 function selectDB() {
