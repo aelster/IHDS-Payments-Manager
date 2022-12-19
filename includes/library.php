@@ -646,6 +646,7 @@ function displayPalette() {
 
                 case "carol":
                 case "donate":
+                case "karin":
                 case "kravmaga":
                 case "nachas":
                 case "pto":
@@ -1211,6 +1212,7 @@ function displayDonors() {
     switch ($gArea) {
         case "carol":
         case "donate":
+        case "karin":
         case "kravmaga":
         case "nachas":
         case "rimon":
@@ -1219,11 +1221,11 @@ function displayDonors() {
             $quals[] = "success = 1";
             $quals[] = "visible = 1";
             
-            $query = "select sum(amount) from donations where frequency = 'monthlytab' and " . implode(" and ", $quals);
+            $query = "select sum(amount) from donations where frequency like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
 
-            $query = "select sum(amount) from donations where frequency != 'monthlytab' and " . implode(" and ", $quals);
+            $query = "select sum(amount) from donations where frequency not like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
 
@@ -1233,11 +1235,11 @@ function displayDonors() {
             $quals[] = "success = 1";
             $quals[] = "visible = 1";
 
-            $query = "select sum(amount) from donations where frequency = 'monthlytab' and " . implode(" and ", $quals);
+            $query = "select sum(amount) from donations where frequency like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
 
-            $query = "select sum(amount) from donations where frequency != 'monthlytab' and " . implode(" and ", $quals);
+            $query = "select sum(amount) from donations where frequency not like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
             
@@ -1248,7 +1250,7 @@ function displayDonors() {
         kravmagaReport();
     }
         
-    $fields = ["visible", "id", "txnId", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
+    $fields = ["visible", "id", "anonymous", "hideAmount", "txnId", "listAs", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
     if ($section == "all") {
         array_splice($fields, 0, 0, ["$section", "success"]);
     }
@@ -1353,7 +1355,7 @@ function displayDonors() {
             } elseif ($f == "frequency") {
                 echo "<td class=\"sort\">";
                 echo "<select class=\"jq\" sorttable_customkey=\"{$row[$f]}\">";
-                foreach (["onetimetab", "monthlytab"] as $opt) {
+                foreach (["oneTime", "monthly"] as $opt) {
                     $selected = ( $row[$f] == $opt ) ? "selected" : "";
                     echo "<option value=\"$opt\" $selected>$opt</option>";
                 }
@@ -1366,7 +1368,7 @@ function displayDonors() {
                 }
                 printf("<input type=text size=$size class=\"ajax\" $ajax_id value=\"%s\" sorttable_customkey=\"%s\"></td>",
                         $s, $row[$f]);
-            } elseif( $f == "visible" ) {
+            } elseif( $f == "visible" || $f == "anonymous" || $f == "hideAmount" ) {
                 echo "<td class=\"sort c\">";
                 if( $row[$f] ) {
                     $state = "checked";
