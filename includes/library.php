@@ -1354,7 +1354,7 @@ function displayDonors() {
                         number_format($row[$f], 2), $row[$f]);
             } elseif ($f == "frequency") {
                 echo "<td class=\"sort\">";
-                echo "<select class=\"jq\" sorttable_customkey=\"{$row[$f]}\">";
+                echo "<select class=\"jq ajax\" $ajax_id sorttable_customkey=\"{$row[$f]}\">";
                 foreach (["oneTime", "monthly"] as $opt) {
                     $selected = ( $row[$f] == $opt ) ? "selected" : "";
                     echo "<option value=\"$opt\" $selected>$opt</option>";
@@ -1411,7 +1411,7 @@ function displayDonors() {
         } elseif ($f == "frequency") {
             echo "<select $tag>";
             $selected = "selected";
-            foreach (["onetimetab", "monthlytab"] as $opt) {
+                foreach (["oneTime", "monthly"] as $opt) {
                 echo "<option value=\"$opt\" $selected>$opt</option>";
                 $selected = "";
             }
