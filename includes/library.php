@@ -765,21 +765,21 @@ function paymentTypeDisplay() {
   </thead>
   <tbody>
 EOT;
-    $stmt = DoQuery("select * from payments order by label ASC");
+    $stmt = DoQuery("select * from paymentMethods order by label ASC");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $id = $row['id'];
         echo "<tr>";
-        $ajax_id = "id=\"payments__label__$id\"";
+        $ajax_id = "id=\"paymentMethods__label__$id\"";
         echo "<td class=center><input type=text size=8 class=\"ajax\" $ajax_id value=\"{$row['label']}\"></td>\n";
         
-        if ($row['enabled']) {
+        if ($row['enable']) {
             $checked = "checked";
             $val = 0;
         } else {
             $checked = "";
             $val = 1;
         }
-        $ajax_id = "id=\"payments__enabled__$id\"";
+        $ajax_id = "id=\"paymentMethods__enable__$id\"";
         echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
 
         $acts = array();
