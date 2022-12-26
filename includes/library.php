@@ -96,7 +96,7 @@ function addForm() {
 
     foreach ($hidden as $var) {
         $tag = MakeTag($var);
-        echo "<input type=hidden $tag>$gLF";
+        echo "<input type=hidden $tag />$gLF";
     }
     define('FORM_OPEN', 1);
     if ($gTrace) {
@@ -252,12 +252,16 @@ function deleteDonor() {
     $obj['type'] = 'update';
     $obj['user_id'] = $_POST['user_id'];
 
-    $id = $_POST['id'];
-    $query = "delete from donations where id = $id";
-    DoQuery($query);
-    $obj['item'] = $query;
-    EventLogRecord($obj);
-
+    $fields = array_unique( explode(',', $_POST['fields'] ) );
+    foreach( $fields as $id ) {
+        if(array_key_exists("group_$id", $_POST ) && $_POST["group_$id"] ) {
+            $query = "delete from donations where id = $id";
+            DoQuery($query);
+            $obj['item'] = $query;
+            EventLogRecord($obj);
+        }
+    }
+    
     if( $gArea == "kravmaga" ) {
         $query = "delete from kravmaga where donationId = $id";
         DoQuery($query);
@@ -289,7 +293,7 @@ function displayBanner() {
         echo "<input type=button"
         . " id=button-logout"
         . " onclick=\"$js\""
-        . " value=Logout>";
+        . " value=Logout />";
 
         if ($_SESSION['level'] >= $gAccessNameToLevel['control']) {
             $jsx = [];
@@ -301,8 +305,7 @@ function displayBanner() {
             . " id=button-control"
             . " class=control"
             . " onclick=\"$js\""
-            . " value=Control>";
-
+            . " value=Control />";
             if (empty($gBannerMode))
                 $gBannerMode = "control";
         }
@@ -317,7 +320,7 @@ function displayBanner() {
             . " id=button-admin"
             . " class=admin"
             . " onclick=\"$js\""
-            . " value=Admin>";
+            . " value=Admin />";
             if (empty($gBannerMode))
                 $gBannerMode = "admin";
         }
@@ -332,7 +335,7 @@ function displayBanner() {
             . " id=button-office"
             . " class=office"
             . " onclick=\"$js\""
-            . " value=Office>";
+            . " value=Office />";
             if (empty($gBannerMode))
                 $gBannerMode = "office";
         }
@@ -348,11 +351,11 @@ function displayBanner() {
 function displayHome() {
     include 'includes/globals.php';
 
-    echo "<input type=button onclick=\"addAction('rimon');\" value=\"Rimon Society\">";
+    echo "<input type=button onclick=\"addAction('rimon');\" value=\"Rimon Society\" />";
     echo "&nbsp;";
-    echo "<input type=button onclick=\"addAction('nachas');\" value=\"Nachas Society\">";
+    echo "<input type=button onclick=\"addAction('nachas');\" value=\"Nachas Society\" />";
     echo "&nbsp;";
-    echo "<input type=button onclick=\"addAction('all');\" value=\"All Society Donors\">";
+    echo "<input type=button onclick=\"addAction('all');\" value=\"All Society Donors\" />";
 }
 
 function displayMail() {
@@ -375,7 +378,7 @@ function displayMail() {
     $jsx[] = "addAction('mail')";
     $js = implode(';', $jsx); 
     echo "&nbsp;";
-    echo "<td class=c><input type=submit onclick=\"$js\" value=New></td>";
+    echo "<td class=c><input type=submit onclick=\"$js\" value=New /></td>";
 
     echo "<br><br>";
     echo "<table class=usermanager>";
@@ -415,7 +418,7 @@ function displayMail() {
             echo "<tr>";
             echo "<td class=col1>$label</td>";
             $ajax_id = "id=\"mail__value__{$id}\"";
-            echo "<td class=col2><input class=\"'col2' ajax\" size=60 $ajax_id value='" . $row['value'] . "'></td>";
+            echo "<td class=col2><input class=\"'col2' ajax\" size=60 $ajax_id value='" . $row['value'] . "' /></td>";
 
             $tag = MakeTag("enabled_$id");
             $acts = array();
@@ -444,7 +447,7 @@ function displayMail() {
             $acts[] = "setValue('func','del')";
             $acts[] = "setValue('id', '$id')";
             $acts[] = "addAction('update')";
-            printf("<td class='col5 c'><input type=button onClick=\"%s\" value='Del'></td>", join(';', $acts));
+            printf("<td class='col5 c'><input type=button onClick=\"%s\" value='Del' /></td>", join(';', $acts));
 
             echo "</tr>";
         }
@@ -765,11 +768,11 @@ function paymentTypeDisplay() {
   </thead>
   <tbody>
 EOT;
-    $stmt = DoQuery("select * from paymentMethods order by label ASC");
+    $stmt = DoQuery("select * from payment_types order by label ASC");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $id = $row['id'];
         echo "<tr>";
-        $ajax_id = "id=\"paymentMethods__label__$id\"";
+        $ajax_id = "id=\"payment_types__label__$id\"";
         echo "<td class=center><input type=text size=8 class=\"ajax\" $ajax_id value=\"{$row['label']}\"></td>\n";
         
         if ($row['enable']) {
@@ -779,7 +782,7 @@ EOT;
             $checked = "";
             $val = 1;
         }
-        $ajax_id = "id=\"paymentMethods__enable__$id\"";
+        $ajax_id = "id=\"payment_types__enable__$id\"";
         echo "<td class=center><input type=checkbox class=ajax $ajax_id value=$val $checked></td>\n";
 
         $acts = array();
@@ -1221,11 +1224,11 @@ function displayDonors() {
             $quals[] = "success = 1";
             $quals[] = "visible = 1";
             
-            $query = "select sum(amount) from donations where frequency like '%month%' and " . implode(" and ", $quals);
+            $query = "select sum(paymentAmount) from donations where paymentFrequency like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
 
-            $query = "select sum(amount) from donations where frequency not like '%month%' and " . implode(" and ", $quals);
+            $query = "select sum(paymentAmount) from donations where paymentFrequency not like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
 
@@ -1235,11 +1238,11 @@ function displayDonors() {
             $quals[] = "success = 1";
             $quals[] = "visible = 1";
 
-            $query = "select sum(amount) from donations where frequency like '%month%' and " . implode(" and ", $quals);
+            $query = "select sum(paymentAmount) from donations where paymentFrequency like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
 
-            $query = "select sum(amount) from donations where frequency not like '%month%' and " . implode(" and ", $quals);
+            $query = "select sum(paymentAmount) from donations where paymentFrequency not like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
             
@@ -1250,7 +1253,7 @@ function displayDonors() {
         kravmagaReport();
     }
         
-    $fields = ["visible", "id", "anonymous", "hideAmount", "txnId", "listAs", "firstName", "lastName", "amount", "frequency", "address", "city", "state", "zip", "phone", "email"];
+    $fields = ["visible", "id", "anonymous", "hideAmount", "txnId", "listAs", "firstName", "lastName", "paymentAmount", "paymentFrequency", "address", "city", "state", "zip", "phone", "email"];
     if ($section == "all") {
         array_splice($fields, 0, 0, ["$section", "success"]);
     }
@@ -1284,7 +1287,18 @@ function displayDonors() {
     echo "<table class=\"section sortable scrollable\">";
     echo "<thead>";
     echo "<tr>";
-    echo "<th>Act</th>";
+    
+    if( $control ) {
+        $jsx = [];
+        $jsx[] = "setValue('area','$section')";
+        $jsx[] = "setValue('func','delete')";
+        $str = sprintf( "Are you sure you want to delete the selected donations?" );
+        $jsx[] = "myConfirm('$str')";
+        $js = sprintf("onclick=\"%s\"", join(';', $jsx));
+
+        echo "<th><input type=button class=delete value=Del $js /></th>";
+    }
+    
     echo "<th>Date/Time</th>";
     foreach ($fields as $f) {
         if( $f == 'all' ) continue;
@@ -1298,7 +1312,7 @@ function displayDonors() {
     $sizes['firstName'] = '20';
     $sizes['lastName'] = '20';
     $sizes['section'] = 6;
-    $sizes['amount'] = '8';
+    $sizes['paymentAmount'] = '8';
     $sizes['address'] = '30';
     $sizes['city'] = '20';
     $sizes['state'] = '3';
@@ -1313,34 +1327,38 @@ function displayDonors() {
     $stmt = DoQuery($query);
     $num = 0;
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $freq = ($row["frequency"] == "monthlytab") ? "monthly" : "onetime";
+        $freq = ($row["paymentFrequency"] == "monthly") ? "monthly" : "once";
         echo "<tr class=\"$freq\">";
         $phpdate = strtotime($row['time']);
         $mysqldate = date('m/d/Y H:m', $phpdate);
         $id = $row['id'];
 
+        echo "<td class=center>";
         if( $control ) {
-            $jsx = [];
-            $jsx[] = "setValue('id',$id)";
-            $jsx[] = "setValue('area','$section')";
-            $jsx[] = "setValue('func','delete')";
-            $str = sprintf( "Are you sure you want to delete the \$ %s donation from %s %s?",
-                    number_format($row['amount'],2), $row['firstName'], $row['lastName']);
-            $jsx[] = "myConfirm('$str')";
-            $js = sprintf("onclick=\"%s\"", join(';', $jsx));
+            if( $row['visible'] ) {
+                $jsx = [];
+                $jsx[] = "addField($id)";
+                $jsx[] = "setValue('id',$id)";
+                $jsx[] = "setValue('area','$section')";
+                $jsx[] = "setValue('func','delete')";
+                $str = sprintf( "Are you sure you want to delete the \$ %s donation from %s %s?",
+                        number_format($row['paymentAmount'],2), $row['firstName'], $row['lastName']);
+                $jsx[] = "myConfirm('$str')";
+                $js = sprintf("onclick=\"%s\"", join(';', $jsx));
+                echo "<p class=hidden id=del_box_$id><input type=checkbox name=group_$id value=1 onclick=\"addField('$id');\" /></p>";
 
-            echo "<p class=hidden id=del_text_$id><input type=button class=delete value=Del $js></p>";
-        } else {
-            echo "<p class=hidden id=del_text_$id>&nbsp;</p>";            
+            } else {
+                echo "<p id=del_box_$id><input type=checkbox name=group_$id value=1 onclick=\"addField('$id');\" /></p>";
+            }
         }
-        echo "<td id=del_$id></span></td>";
+        echo "</td>";
         
-        if( $row['visible'] ) {
-            echo "<script type=\"text/javascript\">del_text_clear($id);</script>";
-        } else {
-            echo "<script type=\"text/javascript\">del_text_load($id);</script>";
-        }
-        
+//        if( $row['visible'] ) {
+//            echo "<script type=\"text/javascript\">del_text_clear($id);</script>";
+//        } else {
+//            echo "<script type=\"text/javascript\">del_text_load($id);</script>";
+//        }
+//        
 
         
         echo "<td sorttable_customkey=\"{$row['time']}\">$mysqldate</td>";
@@ -1368,7 +1386,18 @@ function displayDonors() {
                 }
                 printf("<input type=text size=$size class=\"ajax\" $ajax_id value=\"%s\" sorttable_customkey=\"%s\"></td>",
                         $s, $row[$f]);
-            } elseif( $f == "visible" || $f == "anonymous" || $f == "hideAmount" ) {
+            } elseif( $f == "visible" ) {
+                echo "<td class=\"sort c\">";
+                if( $row[$f] ) {
+                    $state = "checked";
+                    $val = 0;
+                } else {
+                    $state = "";
+                    $val = 1;
+                }
+                printf("<input type=checkbox class=\"ajax\" $ajax_id value=$val $state onclick=\"deleteBoxState(event);\" sorttable_customkey=\"%s\" /></td>",
+                        $row[$f]);
+            } elseif( $f == "anonymous" || $f == "hideAmount" ) {
                 echo "<td class=\"sort c\">";
                 if( $row[$f] ) {
                     $state = "checked";
