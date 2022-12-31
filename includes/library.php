@@ -640,6 +640,14 @@ function displayPalette() {
                         $dpv_pre, $dpv_phase, $dpv_tag, $gAction, $gFrom, $gMode, $gArea, $gFunc));
     }
 
+    if( ! empty($gMessage) ) {
+        echo "<div class=warn>";
+        for( $i = 0; $i < count($gMessage); $i++ ) {
+            echo "$gMessage[$i]<br>";
+        }
+        echo "</div>";
+    }
+    
     switch ($gAction) {
         case "display":
             switch ($gArea) {

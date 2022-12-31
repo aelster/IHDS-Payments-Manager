@@ -690,3 +690,8 @@ p.hidden {
 .border-1-px {
     border: 1px solid #000 !important;
 }
+
+.warn {
+    font-weight: bold;
+    color: red;
+}
