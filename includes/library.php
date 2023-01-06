@@ -240,8 +240,13 @@ EOT;
 }
 
 function checkForDownloads() {
+    include 'includes/globals.php';
     
+    if( $gAction == "download" ) {
+        dumpCSV( $_POST['section_0'] );
+    }
 }
+
 function deleteDonor() {
     include 'includes/globals.php';
     if ($gTrace) {
@@ -1267,9 +1272,13 @@ function displayDonors() {
     }
 
     echo "<br>";
+    $jsx = [];
+    $jsx[] = "setValue('area','$section')";
+    $jsx[] = "addAction('download')";
+    $js1 = join(';', $jsx);
     echo "<div class=\"employees tight_table\">"
     . "<div class=\"status\" id=statusBox>-</div><br>"
-    . "<input type=button onclick=\"addAction('$section');\" value=\"Download\">";
+    . "<input type=button onclick=\"$js1\" value=\"Download\">";
     
     echo "<br><br>";
     echo "One Time Total: \$" . number_format(floatval($oneTime),2);
@@ -1520,7 +1529,8 @@ function dumpCSV() {
     $section = func_get_arg(0);
     
     if(func_num_args() == 1 ) { # Manual Download
-        $file = "Donor Report - $section.csv";
+        $date = date('Ymd');
+        $file = "Donor Report - $section - $date.csv";
         header('Content-Type: application/csv');
         header('Content-Disposition: attachment; filename="' . $file . '";');
         $fh = fopen('php://output', 'w');
@@ -1541,6 +1551,8 @@ function dumpCSV() {
     if ($section == "carol")
         $quals[] = "section = \"$section\"";
     if ($section == "kravmaga")
+        $quals[] = "section = \"$section\"";
+    if ($section == "donate")
         $quals[] = "section = \"$section\"";
 
     $query = "select * from donations where " . implode(" and ", $quals);
