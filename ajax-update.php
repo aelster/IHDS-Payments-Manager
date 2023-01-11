@@ -4,11 +4,11 @@ session_start();
 require_once( 'includes/config.php' );
 include 'includes/globals.php';
 
-$trace = 1;
+$trace = 0;
 $saveDebug = $gDebug;
-$gDebug = $gDebugErrorLog;
 
 if ($trace) {
+    $gDebug = $gDebugErrorLog;
     error_log("");
     error_log( "ajax-update: " . "-------------");
     foreach ($_POST as $key => $val) {
@@ -42,7 +42,8 @@ if ($field == "debug") {
 } else if( $table == 'donations' )  {
     $query = "update $table set `$field` = '$val' where id = $id";
     if( $field == "visible" ) {
-        if( $_POST['section'] == 'kravmaga' ) {
+        $section = array_key_exists('section', $_POST) ? $_POST['section'] : "";
+        if( $section == 'kravmaga' ) {
             $query2 = "update kravmaga set visible = '$val' where donationId = $id";
             if( $trace)
                 error_log($query2);
@@ -71,7 +72,7 @@ if ($table == "access") {
         $refresh = true;
     }
 } else if( $table == "donations" && $field == "visible" ) {
-    $refresh = true;
+//    $refresh = true;
 }
 $response_array = array(
     "status" => "success",

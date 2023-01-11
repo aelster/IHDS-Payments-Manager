@@ -4,6 +4,9 @@ require_once( 'includes/config.php' );
 include 'includes/globals.php';
 
 checkForDownloads();
+header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0"); // HTTP 1.1.
+header("Pragma: no-cache"); // HTTP 1.0.
+header("Expires: 0"); // Proxies.
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

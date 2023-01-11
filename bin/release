@@ -126,7 +126,7 @@ if [ "$user" = "joylearn" ]; then
     ln -s ~/site/Common-IHDS-Payments-Manager/scripts/Common.js Common.js
 
     cd ~/public_html/irvinehebrewday/$dest
-    ln -s ../vendor_new vendor
+    ln -s ../vendor vendor
 
 else
     cd ~/src/websites/ihds/$dest/css
@@ -138,7 +138,7 @@ else
     ln -s /usr/local/site/Common-IHDS-Payments-Manager/scripts/Common.js Common.js
 
     cd ~/src/websites/ihds/$dest
-    ln -s ../vendor_new vendor
+    ln -s ../vendor vendor
 
 fi
 

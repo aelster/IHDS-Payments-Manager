@@ -108,9 +108,6 @@ function addHtmlHeader() {
     include 'includes/globals.php';
     
     echo "<head>";
-header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0"); // HTTP 1.1.
-header("Pragma: no-cache"); // HTTP 1.0.
-header("Expires: 0"); // Proxies.
 
     echo <<<EOT
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -1557,6 +1554,25 @@ function dumpCSV() {
 
     $query = "select * from donations where " . implode(" and ", $quals);
 
+    $mapToLGL = [];
+    $mapToLGL['time'] = 'Gift date';
+    $mapToLGL['txnId'] = 'External gift ID';
+    $mapToLGL['firstName'] = 'First name';
+    $mapToLGL['lastName'] = 'Last name';
+    $mapToLGL['address'] = 'Address line 1';
+    $mapToLGL['city'] = 'City';
+    $mapToLGL['state'] = 'State/province';
+    $mapToLGL['zip'] = 'Postal/ZIP code';
+    $mapToLGL['phone'] = 'Phone number';
+    $mapToLGL['email'] = 'Email address';
+    $mapToLGL['paymentAmount'] = 'Gift amount';
+    $mapToLGL['paymentFrequency'] = 'Note text';
+    $mapToLGL['paymentType'] = 'Payment type';
+    $mapToLGL['section'] = 'Gift category';
+    $mapToLGL['memo'] = 'Gift note';
+    $mapToLGL['anonymous'] = 'Gift is anonymous?';
+    $mapToLGL['listAsWeek'] = 'Tribute Dedication';
+    
     $stmt = DoQuery($query);
     $num = 0;
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -1564,7 +1580,11 @@ function dumpCSV() {
         if ($num == 1) {
             $fields = [];
             foreach ($row as $key => $val) {
-                $fields[] = $key;
+                if( array_key_exists($key, $mapToLGL) ) {
+                    $fields[] = $mapToLGL[$key];
+                } else {
+                    $fields[] = $key;
+                }
             }
             fputcsv($fh, $fields, ',');
         }
