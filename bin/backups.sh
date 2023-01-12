@@ -2,7 +2,7 @@
 
 startDir=`pwd`
 
-ts=`date +"%Y-%m-%d_%H-%M-%S"`
+ts=`date +"%Y-%m-%d"`
 def="/home1/joylearn/site/ihds/.ihds-dump.cnf"
 db="joylearn_ihds_donors"
 sqlFile="${db}_${ts}.sql"

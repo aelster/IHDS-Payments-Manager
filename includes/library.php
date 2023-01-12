@@ -1302,7 +1302,7 @@ function displayDonors() {
     echo "<thead>";
     echo "<tr>";
     
-    if( $control ) {
+    if( 1 || $control ) {
         $jsx = [];
         $jsx[] = "setValue('area','$section')";
         $jsx[] = "setValue('func','delete')";
@@ -1348,7 +1348,7 @@ function displayDonors() {
         $id = $row['id'];
 
         echo "<td class=center>";
-        if( $control ) {
+        if( 1 || $control ) {
             if( $row['visible'] ) {
                 $jsx = [];
                 $jsx[] = "addField($id)";
