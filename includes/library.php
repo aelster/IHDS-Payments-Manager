@@ -350,16 +350,6 @@ function displayBanner() {
     }
 }
 
-function displayHome() {
-    include 'includes/globals.php';
-
-    echo "<input type=button onclick=\"addAction('rimon');\" value=\"Rimon Society\" />";
-    echo "&nbsp;";
-    echo "<input type=button onclick=\"addAction('nachas');\" value=\"Nachas Society\" />";
-    echo "&nbsp;";
-    echo "<input type=button onclick=\"addAction('all');\" value=\"All Society Donors\" />";
-}
-
 function displayMail() {
     include 'includes/globals.php';
     
@@ -654,16 +644,7 @@ function displayPalette() {
         case "display":
             switch ($gArea) {
                 case "all":
-                    displayDonors($gArea);
-                    break;
-
-                case "carol":
-                case "donate":
-                case "karin":
-                case "kravmaga":
-                case "nachas":
-                case "pto":
-                case "rimon":
+                case in_array( $gArea, $gSectionsFound):
                 case "section":
                     displayDonors($gArea);
                     break;
@@ -712,9 +693,6 @@ function displayPalette() {
                     UserManager("control");
                     break;
 
-                case "reports":
-                    displayHome();
-                    break;
             }
             break;
 
@@ -818,7 +796,7 @@ function sectionDisplay() {
     <tr>
       <th>Label</th>
       <th>Enabled</th>
-      <th>Emails</th>
+      <th>Emails (separate with a ;)</th>
       <th>Action</th>
     </tr>
   </thead>
@@ -1221,15 +1199,9 @@ function displayDonors() {
     $onetime = $monthly = 0.0;
     
     error_log( "gArea : $gArea" );
+        
     $quals = [];
-    switch ($gArea) {
-        case "carol":
-        case "donate":
-        case "karin":
-        case "kravmaga":
-        case "nachas":
-        case "rimon":
-        case "pto":
+    if( in_array($gArea, $gSectionsFound ) ) {
             $quals[] = "section = \"$section\"";
             $quals[] = "success = 1";
             $quals[] = "visible = 1";
@@ -1241,10 +1213,7 @@ function displayDonors() {
             $query = "select sum(paymentAmount) from donations where paymentFrequency not like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
-
-            break;
-
-        case "all":
+    } else {
             $quals[] = "success = 1";
             $quals[] = "visible = 1";
 
@@ -1256,7 +1225,6 @@ function displayDonors() {
             $stat = DoQuery($query);        
             list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
             
-            break;
     }
     
     if( $gArea == 'kravmaga' ) {
@@ -1461,7 +1429,7 @@ function displayDonors() {
         } elseif( $gArea == "all" && $f == "section" ) {
             echo "<select $tag>";
             $selected = "";
-            foreach (["nachas", "rimon","carol", "kravmaga"] as $opt) {
+            foreach ($gSectionsFound as $opt) {
                 echo "<option value=\"$opt\">$opt</option>";
                 $selected = "selected";
             }
@@ -1541,15 +1509,7 @@ function dumpCSV() {
 
     $quals = [];
     $quals[] = "success = 1";
-    if ($section == "rimon")
-        $quals[] = "section = \"$section\"";
-    if ($section == "nachas")
-        $quals[] = "section = \"$section\"";
-    if ($section == "carol")
-        $quals[] = "section = \"$section\"";
-    if ($section == "kravmaga")
-        $quals[] = "section = \"$section\"";
-    if ($section == "donate")
+    if( in_array($section, $gSectionsFound) )
         $quals[] = "section = \"$section\"";
 
     $query = "select * from donations where " . implode(" and ", $quals);
@@ -1751,6 +1711,19 @@ function initialize() {
     foreach ($buttons as $obj) {
         $gAreaToMode[$obj['area']] = $mode;
     }
+    
+    $stmt = DoQuery( "select distinct section from donations");
+    $gSectionsFound = [];
+    while( list( $name ) = $stmt->fetch(PDO::FETCH_NUM) ) {
+        $gSectionsFound[] = $name;
+    }
+/*
+ * Verify new fields in Database
+ */
+    $stmt = DoQuery( "show columns from donations where field like '%item%'");
+    if( $gPDO_num_rows == 0 ) {
+        DoQuery( "ALTER TABLE `donations` ADD `itemName` VARCHAR(255) NULL DEFAULT NULL AFTER `section`;");
+    }
 }
 
 function kravmagaReport() {
@@ -1867,7 +1840,7 @@ function loadMailSettings() {
         DoQuery("select id from mail where mode = '$mode'");
         if($gPDO_num_rows == 0) {
             if( $mode == 'Live' ) {
-                DoQuery( "insert into mail (mode, value, enabled) values ('$mode', 'In not enabled, all emails go to enabled Testing accounts', 0)");
+                DoQuery( "insert into mail (mode, value, enabled) values ('$mode', 'If not enabled, all emails go to enabled Testing accounts', 0)");
             } elseif( $mode == 'Server' ) {
                 DoQuery( "insert into mail (mode, value, enabled) values ('$mode', 0, 0)");
             } else {
@@ -1922,7 +1895,7 @@ function loadMailSettings() {
 function phase1() {     # Phase1 is for pre-output actions that would interfere with PDF production
     include 'includes/globals.php';
 
-    if( in_array( $gAction, array( 'rimon', 'nachas', 'carol', 'kravmaga', 'all' ) ) ) {
+    if( in_array( $gAction, $gSectionsFound ) || $gAction == "all" ) {
         dumpCSV($action);
         exit();
     }
@@ -2068,12 +2041,7 @@ function phase2() { # updates
                     break;
                 
                 case "all":
-                case "carol":
-                case "donate":
-                case "kravmaga":
-                case "nachas":
-                case "pto":
-                case "rimon":
+                case in_array($gArea, $gSectionsFound):
                     if( $gFunc == 'delete') {
                         deleteDonor();
                     } elseif( $gFunc == 'add') {

@@ -73,6 +73,7 @@ global $gProduction;
 global $gResetKey;
 global $gRosterFiscalYear;
 global $gRosterSessionTitle;
+global $gSectionsFound;
 global $gSidebarButtons;
 global $gSiteDir;
 global $gSiteName;
