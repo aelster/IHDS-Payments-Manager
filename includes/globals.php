@@ -74,6 +74,7 @@ global $gResetKey;
 global $gRosterFiscalYear;
 global $gRosterSessionTitle;
 global $gSectionsFound;
+global $gSecurityDeltaTimes;
 global $gSidebarButtons;
 global $gSiteDir;
 global $gSiteName;

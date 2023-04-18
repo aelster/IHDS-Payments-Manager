@@ -689,6 +689,10 @@ function displayPalette() {
                     SourceDisplay();
                     break;
 
+                case "special":
+                    displaySpecial();
+                    break;
+                
                 case "users":
                     UserManager("control");
                     break;
@@ -1488,6 +1492,28 @@ function displaySite() {
     }
 }
 
+function displaySpecial() {
+    include 'includes/globals.php';
+    if( $gTrace ) {
+        $gFunction[] = __FUNCTION__;
+    }
+    
+    $jsx = [];
+    $jsx[] = "setValue('mode','control')";
+    $jsx[] = "setValue('area','bad-card')";
+    $jsx[] = "addAction('special')";
+    $js = implode(';', $jsx);
+    echo "<input type=button"
+    . " id=button-control"
+    . " class=control"
+    . " onclick=\"$js\""
+    . " value='Bad Card' />";
+    
+    if( $gTrace ) {
+        array_pop($gFunction);
+    }
+}
+
 function dumpCSV() {
     include 'includes/globals.php';
 
@@ -2003,6 +2029,12 @@ function phase2() { # updates
             }
             break;
         
+        case "special":
+            if( $gArea == 'bad-card' ) {
+                
+            }
+            break;
+        
         case "update":
             switch ($gArea) {
                 case "debug":
@@ -2129,6 +2161,8 @@ function phase3() { # display
     
     if( $gFunc == 'test' ) {
         UserMail('test');
+    } elseif( $gFunc == 'special' ) {
+        securityAddTime();
     }
 
     if ($gDebug) {
@@ -2167,6 +2201,23 @@ function updateMisc() {
         DoQuery($query);
     }
     array_pop($gFunction);
+}
+
+function securityAddTime() {
+    include 'includes/globals.php';
+    if ($gTrace) {
+        $gFunction[] = __FUNCTION__;
+    }
+    $stmt = DoQuery( "select id, value from misc where label = 'Security_NextTransactionTime'");
+    list( $id, $val ) = $stmt->fetch(PDO::FETCH_NUM);
+    $ts = strtotime($val);
+    $ts = time() + 1 * 60;
+    $val = date('Y-m-j H:i:s', $ts );
+    DoQuery( "update misc set value = '$val' where id = $id");
+            
+    if( $gTrace) {
+        array_pop($gFunction);
+    }
 }
 
 function selectDB() {
