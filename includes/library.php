@@ -1860,6 +1860,7 @@ function loadMailSettings() {
         Logger();
     }
     $gMailAdmin = "";
+    $gMailBackup = [];
     $gMailTesting = [];
 
     foreach( $gMailModes as $mode ) {
@@ -2340,7 +2341,7 @@ function updateMail() {
         Logger();
     }
     if ($gFunc == 'add') {
-        $v = preg_split('/,/', $_POST['fields'], NULL, PREG_SPLIT_NO_EMPTY);
+        $v = preg_split('/,/', $_POST['fields'], 0, PREG_SPLIT_NO_EMPTY);
         $flds = array_unique($v);
         $qx = [];
         $args = [];
@@ -2376,7 +2377,7 @@ function updateMail() {
         $id = $_POST['id'];
         DoQuery("delete from mail where id = :id", [':id' => $id]);
     } elseif ($gFunc == 'update') {
-        $v = preg_split('/,/', $_POST['fields'], NULL, PREG_SPLIT_NO_EMPTY);
+        $v = preg_split('/,/', $_POST['fields'], 0, PREG_SPLIT_NO_EMPTY);
         $flds = array_unique($v);
         foreach ($flds as $fld) {
             $args = [];
