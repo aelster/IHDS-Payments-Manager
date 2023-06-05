@@ -61,7 +61,7 @@ function addDonor() {
                 break;
         }
     }
-    $query = "insert into donations set " . implode(',', $args);
+    $query = "insert into orders set " . implode(',', $args);
     DoQuery($query, $vals);
 
     $obj = [];
@@ -257,7 +257,7 @@ function deleteDonor() {
     $fields = array_unique( explode(',', $_POST['fields'] ) );
     foreach( $fields as $id ) {
         if(array_key_exists("group_$id", $_POST ) && $_POST["group_$id"] ) {
-            $query = "delete from donations where id = $id";
+            $query = "delete from orders where id = $id";
             DoQuery($query);
             $obj['item'] = $query;
             EventLogRecord($obj);
@@ -1210,22 +1210,22 @@ function displayDonors() {
             $quals[] = "success = 1";
             $quals[] = "visible = 1";
             
-            $query = "select sum(paymentAmount) from donations where paymentFrequency like '%month%' and " . implode(" and ", $quals);
+            $query = "select sum(paymentAmount) from orders where paymentFrequency like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
 
-            $query = "select sum(paymentAmount) from donations where paymentFrequency not like '%month%' and " . implode(" and ", $quals);
+            $query = "select sum(paymentAmount) from orders where paymentFrequency not like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
     } else {
             $quals[] = "success = 1";
             $quals[] = "visible = 1";
 
-            $query = "select sum(paymentAmount) from donations where paymentFrequency like '%month%' and " . implode(" and ", $quals);
+            $query = "select sum(paymentAmount) from orders where paymentFrequency like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $monthly ) = $stat->fetch(PDO::FETCH_NUM);
 
-            $query = "select sum(paymentAmount) from donations where paymentFrequency not like '%month%' and " . implode(" and ", $quals);
+            $query = "select sum(paymentAmount) from orders where paymentFrequency not like '%month%' and " . implode(" and ", $quals);
             $stat = DoQuery($query);        
             list( $oneTime ) = $stat->fetch(PDO::FETCH_NUM);
             
@@ -1307,7 +1307,7 @@ function displayDonors() {
 
     echo "<tbody>";
     array_pop( $quals ); // This is really ugly, but it removes the visible qualifier
-    $query = "select * from donations where " . implode(' and ', $quals );
+    $query = "select * from orders where " . implode(' and ', $quals );
     $query .= " order by time desc";
 
     $stmt = DoQuery($query);
@@ -1538,7 +1538,7 @@ function dumpCSV() {
     if( in_array($section, $gSectionsFound) )
         $quals[] = "section = \"$section\"";
 
-    $query = "select * from donations where " . implode(" and ", $quals);
+    $query = "select * from orders where " . implode(" and ", $quals);
 
     $mapToLGL = [];
     $mapToLGL['time'] = 'Gift date';
@@ -1727,7 +1727,7 @@ function initialize() {
 //=====================================    
     $mode = 'office';
     $buttons = array();
-    $stmt = DoQuery("select distinct section from donations order by section asc");
+    $stmt = DoQuery("select distinct section from orders order by section asc");
     while (list($name) = $stmt->fetch(PDO::FETCH_NUM)) {
         $buttons[] = ['area' => "$name", 'js' => "setValue('func','show'),setValue('area','$name')"];
     }
@@ -1738,7 +1738,7 @@ function initialize() {
         $gAreaToMode[$obj['area']] = $mode;
     }
     
-    $stmt = DoQuery( "select distinct section from donations");
+    $stmt = DoQuery( "select distinct section from orders");
     $gSectionsFound = [];
     while( list( $name ) = $stmt->fetch(PDO::FETCH_NUM) ) {
         $gSectionsFound[] = $name;
@@ -1746,7 +1746,7 @@ function initialize() {
 /*
  * Verify new fields in Database
  */
-    $stmt = DoQuery( "show columns from donations where field like '%item%'");
+    $stmt = DoQuery( "show columns from orders where field like '%item%'");
     if( $gPDO_num_rows == 0 ) {
         DoQuery( "ALTER TABLE `donations` ADD `itemName` VARCHAR(255) NULL DEFAULT NULL AFTER `section`;");
     }
@@ -1829,7 +1829,7 @@ EOT;
     echo "<tbody>";
     // kravmaga: a; donations: b
     $query = "select a.*, b.id, b.time, b.firstName, b.lastName, b.phone, b.email, b.orderDetail"
-        . " from donations b inner join kravmaga a"
+        . " from orders b inner join kravmaga a"
         . " on a.donationId = b.id"
         . " where b.success = 1 and b.visible = 1"
         . " order by a.discountId asc, b.time desc";
