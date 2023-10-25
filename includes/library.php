@@ -2225,13 +2225,12 @@ function selectDB() {
     include 'includes/globals.php';
     if ($gTrace) {
         $gFunction[] = __FUNCTION__;
-        if (defined('DB_OPEN')) {
-            Logger('fy select (DB_OPEN defined):');
-        } else {
-            Logger('fy select (DB_OPEN not defined - first call):');
-        }
     }
+
+    $openType = ( func_num_args() == 0 ) ? 'local' : 'remote';
     for ($i = 0; $i < count($gPDO); $i++) {
+        $gPDO[$i]['open'] = false;
+        if( $gPDO[$i]['mode'] != $openType ) continue;
         $tmp = [];
         $tmp[] = $gPDO[$i]['host'];
         $tmp[] = 'dbname=' . $gPDO[$i]['dbname'];
@@ -2249,6 +2248,7 @@ function selectDB() {
                 $attr[PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION;
             }
             $gPDO[$i]['inst'] = new PDO($dsn, $user, $pass, $attr);
+            $gPDO[$i]['open'] = true;
         } catch (PDOException $e) {
             echo "failed to open DB #$i<br>";
             //show error
@@ -2257,7 +2257,8 @@ function selectDB() {
             throw $e;
         }
     }
-    $gDb = $gPDO[$gDbControlId]['inst'];
+    $gDb = $gPDO[0]['inst'];
+    $gUser->setDB($gDb);
 
     initialize();
 }

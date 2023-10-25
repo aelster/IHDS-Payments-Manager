@@ -41,8 +41,8 @@ require( "$gSiteDir/PHPMailer/src/Exception.php");
 require( "$gSiteDir/fpdf/fpdf.php");
 
 $path = join(PATH_SEPARATOR, array(
-    $gSiteDir . "/Common-IHDS-Payments-Manager",
     $gSiteDir . "/$gSiteSubPath/payments",
+    $gSiteDir . "/Common-IHDS-Payments-Manager",
     $gSiteDir . "/PHPMailer",
     $gSiteDir . "/fpdf"
     ));
@@ -59,7 +59,6 @@ include 'local-payments.php';
 require_once( 'php/SiteLoader.php' );
 SiteLoad( 'php/library');
 
-
+$gUser = new User2();
 selectDB();
 
-$gUser = new User2($gDb = $gPDO[$gDbControlId]['inst']);
